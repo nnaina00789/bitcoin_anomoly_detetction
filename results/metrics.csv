@@ -1,0 +1,5 @@
+model,P@50,P@100,P@500,PR-AUC,flag_rate_%
+Random (reference),0.02,0.05,0.07,0.066,1.14
+Amount baseline,0.0,0.0,0.0,0.044,1.19
+Isolation Forest (all features),0.0,0.0,0.0,0.037,6.1
+Isolation Forest (local only),0.0,0.0,0.0,0.038,4.52
