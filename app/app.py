@@ -7,13 +7,16 @@ TIME, AMOUNT = "Time step", "total_BTC"
 st.set_page_config(page_title="Bitcoin Flow Investigator", page_icon="🔎", layout="wide")
 
 @st.cache_data
+@st.cache_data
 def load():
     s = pd.read_csv(ROOT / "results" / "scores.csv")
     m = pd.read_csv(ROOT / "results" / "metrics.csv")
+    c = pd.read_csv(ROOT / "results" / "cluster_info.csv")[["cluster", "n_verified"]]
+    b = pd.read_csv(ROOT / "results" / "label_budget.csv")
     s["status"] = s["y"].map({1: "Illicit (verified)", 0: "Licit (verified)"}).fillna("Unverified")
-    return s[s[TIME] >= 35], m          # dashboard shows the unseen test period only
+    return s[s[TIME] >= 35], m, c, b
 
-scores, metrics = load()
+scores, metrics, cinfo, budget = load()
 
 st.title("🔎 Bitcoin Unusual Flow Investigator")
 st.caption("Cluster-then-verify risk scoring · Elliptic++ dataset · test period: time steps 35–49")
@@ -26,7 +29,7 @@ all_status = ["Illicit (verified)", "Licit (verified)", "Unverified"]
 statuses = st.sidebar.multiselect("Label status", all_status, default=all_status)
 
 view = scores[scores[TIME].between(t0, t1) & scores["status"].isin(statuses)]
-ranked = view.sort_values("score", ascending=False).head(top_n)
+ranked = view.sort_values(["score", TIME], ascending=False).head(top_n)
 lab = ranked[ranked["y"].notna()]
 
 # ---- KPI cards ----
@@ -50,10 +53,14 @@ with tab2:
     cl = (view.groupby("cluster")
               .agg(transactions=("txId", "size"), risk=("score", "first"))
               .sort_values("risk", ascending=False).reset_index())
+    cl = cl.merge(cinfo, on="cluster", how="left")
+    st.caption("Risk = smoothed illicit rate among n_verified training-period transactions. "
+               "Fewer verified labels means a less reliable estimate.")
     st.dataframe(
         cl, hide_index=True,
         column_config={"risk": st.column_config.ProgressColumn("Risk", min_value=0, max_value=1, format="%.3f")},
     )
+    st.caption("Flows in the same cluster share a risk score; within a cluster, the most recent appear first.")
     pick = st.selectbox("Inspect a cluster", cl["cluster"])
     sub = view[view["cluster"] == pick]
     st.write(f"**Cluster {pick}:** {len(sub):,} transactions in view")
@@ -62,9 +69,12 @@ with tab2:
 
 with tab3:
     st.dataframe(metrics, hide_index=True)
+    st.subheader("How much verification is needed?")
+    st.line_chart(budget, x="total_labels", y="PR-AUC mean",
+                  x_label="Verified labels", y_label="PR-AUC")
     st.markdown(
-        "- **Random reference** shows the floor. Anything below it is worse than guessing.\n"
+        "- **Random reference** is the floor. Anything below it is worse than guessing.\n"
         "- **Amount rule and Isolation Forest** fall below random: illicit flows are not extreme outliers.\n"
-        "- **Cluster-then-verify** reaches about 2.3× random PR-AUC (0.155 ± 0.017 over 5 seeds) "
-        "using about 200 verified training labels."
+        "- **Cluster-then-verify** reaches about 3× random PR-AUC (0.197 ± 0.012 over 5 seeds) "
+        "with 500 verified training labels (1.7%). Gains flatten beyond that."
     )
