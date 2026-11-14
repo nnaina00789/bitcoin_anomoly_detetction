@@ -97,13 +97,25 @@ html, body, [class*="css"] {
     font-family: 'JetBrains Mono', monospace !important;
 }
 [data-testid="stVerticalBlockBorderWrapper"] {
-    background: linear-gradient(165deg, rgba(15, 23, 42, 0.78) 0%, rgba(9, 14, 27, 0.88) 100%) !important;
-    backdrop-filter: blur(20px);
-    -webkit-backdrop-filter: blur(20px);
-    border: 1px solid rgba(148, 163, 184, 0.16) !important;
-    border-radius: 16px !important;
-    padding: 22px 24px !important;
-    box-shadow: 0 24px 48px -12px rgba(0, 0, 0, 0.55);
+    background: linear-gradient(160deg, rgba(17, 25, 46, 0.78), rgba(9, 14, 29, 0.88)) !important;
+    backdrop-filter: blur(22px);
+    -webkit-backdrop-filter: blur(22px);
+    border: 1px solid rgba(56, 189, 248, 0.26) !important;
+    border-radius: 20px !important;
+    padding: 24px 26px !important;
+    box-shadow:
+        0 30px 65px rgba(0, 0, 0, 0.65),
+        0 0 45px rgba(56, 189, 248, 0.10),
+        inset 0 1px 0 rgba(255, 255, 255, 0.14);
+    transition: transform 0.45s cubic-bezier(0.22, 1, 0.36, 1), box-shadow 0.45s cubic-bezier(0.22, 1, 0.36, 1), border-color 0.45s ease;
+}
+[data-testid="stVerticalBlockBorderWrapper"]:hover {
+    transform: translateY(-4px);
+    border-color: rgba(56, 189, 248, 0.48) !important;
+    box-shadow:
+        0 36px 75px rgba(0, 0, 0, 0.75),
+        0 0 55px rgba(56, 189, 248, 0.18),
+        inset 0 1px 0 rgba(255, 255, 255, 0.20);
 }
 [data-testid="stForm"] {
     background: transparent !important;
@@ -203,19 +215,78 @@ html, body, [class*="css"] {
     border-right: 1px solid #1E293B;
 }
 [data-testid="stHeaderActionElements"] { display: none; }
-.login-header {
-    text-align: center;
-    margin: 12px 0 24px 0;
+.vault-wrap {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 24px 0 16px 0;
+    perspective: 1000px;
+    position: relative;
 }
-.login-heading {
-    font-size: 1.95rem;
+.vault-aura {
+    position: absolute;
+    width: 220px;
+    height: 220px;
+    border-radius: 50%;
+    background: radial-gradient(circle, rgba(56, 189, 248, 0.25), rgba(99, 102, 241, 0.14), transparent 70%);
+    filter: blur(22px);
+}
+.vault-orbit-outer {
+    position: relative;
+    width: 164px;
+    height: 164px;
+    border-radius: 50%;
+    border: 1px solid rgba(56, 189, 248, 0.35);
+    box-shadow: 0 0 30px rgba(56, 189, 248, 0.16), inset 0 0 24px rgba(56, 189, 248, 0.08);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transform-style: preserve-3d;
+    animation: vaultFloat 6s cubic-bezier(0.45, 0, 0.55, 1) infinite;
+}
+.vault-orbit-inner {
+    width: 128px;
+    height: 128px;
+    border-radius: 50%;
+    border: 1px dashed rgba(245, 158, 11, 0.45);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transform: translateZ(18px);
+}
+.vault-coin {
+    width: 90px;
+    height: 90px;
+    border-radius: 50%;
+    background: linear-gradient(145deg, rgba(245, 158, 11, 0.25), rgba(15, 23, 42, 0.92));
+    border: 1.5px solid rgba(245, 158, 11, 0.65);
+    box-shadow:
+        0 16px 35px rgba(0, 0, 0, 0.6),
+        0 0 28px rgba(245, 158, 11, 0.28),
+        inset 0 2px 6px rgba(255, 255, 255, 0.22);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 2.55rem;
+    font-weight: 800;
+    color: #FBBF24;
+    text-shadow: 0 2px 18px rgba(251, 191, 36, 0.55);
+    transform: translateZ(34px);
+}
+.vault-title {
+    text-align: center;
+    font-size: 2.05rem;
     font-weight: 700;
-    line-height: 1.25;
-    letter-spacing: -0.025em;
-    background: linear-gradient(95deg, #FFFFFF 0%, #BAE6FD 55%, #A5B4FC 100%);
+    letter-spacing: -0.02em;
+    background: linear-gradient(90deg, #F8FAFC 0%, #BAE6FD 55%, #818CF8 100%);
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
-    margin: 0;
+    margin: 18px 0 8px 0;
+}
+@keyframes vaultFloat {
+    0%, 100% { transform: translateY(0px) scale(1); }
+    50%      { transform: translateY(-7px) scale(1.02); }
 }
 </style>
 """, unsafe_allow_html=True)
@@ -1089,15 +1160,21 @@ def _save_profiles(profiles: dict) -> None:
 
 
 def page_login():
-    st.markdown(
-        '<div class="login-header">'
-        '<h1 class="login-heading">Bitcoin Transaction Anomaly &amp; Security Scanner</h1>'
-        '</div>',
-        unsafe_allow_html=True,
-    )
-    _, center_col, _ = st.columns([1.0, 1.15, 1.0])
+    _, center_col, _ = st.columns([0.9, 1.35, 0.9])
 
     with center_col:
+        st.markdown(
+            '<div class="vault-wrap">'
+            '<div class="vault-aura"></div>'
+            '<div class="vault-orbit-outer">'
+            '<div class="vault-orbit-inner">'
+            '<div class="vault-coin">&#8383;</div>'
+            '</div>'
+            '</div>'
+            '<div class="vault-title">Bitcoin Transaction Anomaly &amp; Security Scanner</div>'
+            '</div>',
+            unsafe_allow_html=True,
+        )
         with st.container(border=True):
             tab_create, tab_signin = st.tabs(["Create Profile", "Sign In"])
 
