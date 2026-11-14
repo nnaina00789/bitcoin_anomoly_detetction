@@ -899,11 +899,141 @@ def _save_profiles(profiles: dict) -> None:
 
 
 def page_login():
-    _, mid, _ = st.columns([1, 1.35, 1])
-    with mid:
+    st.markdown("""
+    <style>
+    [data-testid="stAppViewContainer"] {
+        background:
+            radial-gradient(circle at 18% 22%, rgba(56, 189, 248, 0.20) 0%, transparent 42%),
+            radial-gradient(circle at 82% 78%, rgba(99, 102, 241, 0.22) 0%, transparent 45%),
+            radial-gradient(circle at 50% 50%, rgba(245, 158, 11, 0.07) 0%, transparent 55%),
+            linear-gradient(135deg, #040711 0%, #0B1328 50%, #070B18 100%) !important;
+    }
+    [data-testid="stHeader"] { background: transparent !important; }
+    [data-testid="stForm"] {
+        background: linear-gradient(155deg, rgba(15, 23, 42, 0.86), rgba(8, 13, 27, 0.94));
+        backdrop-filter: blur(18px);
+        border: 1px solid rgba(56, 189, 248, 0.28);
+        border-radius: 18px;
+        padding: 24px 26px;
+        box-shadow:
+            0 28px 60px rgba(0, 0, 0, 0.65),
+            0 0 38px rgba(56, 189, 248, 0.12),
+            inset 0 1px 0 rgba(255, 255, 255, 0.12);
+        transform: perspective(1000px) rotateX(1deg);
+        transition: transform 0.3s ease, box-shadow 0.3s ease;
+    }
+    [data-testid="stForm"]:hover {
+        transform: perspective(1000px) rotateX(0deg) translateY(-3px);
+        box-shadow:
+            0 34px 70px rgba(0, 0, 0, 0.72),
+            0 0 46px rgba(56, 189, 248, 0.20),
+            inset 0 1px 0 rgba(255, 255, 255, 0.18);
+    }
+    .btc-stage {
+        height: 410px;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        perspective: 1100px;
+        position: relative;
+    }
+    .btc-glow {
+        position: absolute;
+        width: 240px;
+        height: 240px;
+        border-radius: 50%;
+        background: radial-gradient(circle, rgba(56, 189, 248, 0.28), rgba(245, 158, 11, 0.10), transparent 70%);
+        filter: blur(18px);
+        animation: pulseGlow 4s ease-in-out infinite;
+    }
+    .btc-ring {
+        position: absolute;
+        width: 270px;
+        height: 270px;
+        border-radius: 50%;
+        border: 1.5px dashed rgba(56, 189, 248, 0.45);
+        transform: rotateX(68deg) rotateY(-14deg);
+        animation: orbitSpin 14s linear infinite;
+    }
+    .btc-cube {
+        width: 148px;
+        height: 148px;
+        position: relative;
+        transform-style: preserve-3d;
+        animation: cubeSpin 12s linear infinite;
+    }
+    .btc-face {
+        position: absolute;
+        width: 148px;
+        height: 148px;
+        border: 1.5px solid rgba(56, 189, 248, 0.55);
+        border-radius: 20px;
+        background: linear-gradient(135deg, rgba(56, 189, 248, 0.16), rgba(15, 23, 42, 0.72));
+        box-shadow: inset 0 0 24px rgba(56, 189, 248, 0.22);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 3.1rem;
+        font-weight: 800;
+        color: #F59E0B;
+        text-shadow: 0 0 22px rgba(245, 158, 11, 0.65);
+        backface-visibility: visible;
+    }
+    .btc-front  { transform: translateZ(74px); }
+    .btc-back   { transform: rotateY(180deg) translateZ(74px); }
+    .btc-right  { transform: rotateY(90deg) translateZ(74px); }
+    .btc-left   { transform: rotateY(-90deg) translateZ(74px); }
+    .btc-top    { transform: rotateX(90deg) translateZ(74px); }
+    .btc-bottom { transform: rotateX(-90deg) translateZ(74px); }
+    .btc-badge {
+        margin-top: 58px;
+        padding: 7px 16px;
+        border-radius: 999px;
+        background: rgba(15, 23, 42, 0.75);
+        border: 1px solid rgba(56, 189, 248, 0.35);
+        color: #CBD5E1;
+        font-size: 0.82rem;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        box-shadow: 0 10px 24px rgba(0, 0, 0, 0.4);
+    }
+    @keyframes cubeSpin {
+        0%   { transform: rotateX(-18deg) rotateY(0deg); }
+        100% { transform: rotateX(-18deg) rotateY(360deg); }
+    }
+    @keyframes orbitSpin {
+        0%   { transform: rotateX(68deg) rotateY(-14deg) rotateZ(0deg); }
+        100% { transform: rotateX(68deg) rotateY(-14deg) rotateZ(360deg); }
+    }
+    @keyframes pulseGlow {
+        0%, 100% { transform: scale(0.95); opacity: 0.75; }
+        50%      { transform: scale(1.1); opacity: 1; }
+    }
+    </style>
+    """, unsafe_allow_html=True)
+
+    left_col, right_col = st.columns([1.0, 1.15], gap="large")
+    with left_col:
+        st.markdown("""
+        <div class="btc-stage">
+            <div class="btc-glow"></div>
+            <div class="btc-ring"></div>
+            <div class="btc-cube">
+                <div class="btc-face btc-front">&#8383;</div>
+                <div class="btc-face btc-back">&#8383;</div>
+                <div class="btc-face btc-right">&#8383;</div>
+                <div class="btc-face btc-left">&#8383;</div>
+                <div class="btc-face btc-top"></div>
+                <div class="btc-face btc-bottom"></div>
+            </div>
+            <div class="btc-badge">AML &amp; Blockchain Security</div>
+        </div>
+        """, unsafe_allow_html=True)
+
+    with right_col:
         st.write("")
         st.title("Bitcoin Flow Intelligence")
-        st.caption("Create an analyst profile or sign in to access the live CSV scanner and AML dashboard.")
 
         tab_create, tab_signin = st.tabs(["Create Profile", "Sign In"])
 
