@@ -56,9 +56,11 @@ html, body, [class*="css"] {
 }
 .stApp {
     background:
-        radial-gradient(ellipse 70% 50% at 12% 10%, rgba(56, 189, 248, 0.11), transparent 60%),
-        radial-gradient(ellipse 60% 50% at 88% 90%, rgba(37, 99, 235, 0.10), transparent 60%),
-        linear-gradient(180deg, #050913 0%, #091020 55%, #060B16 100%) !important;
+        radial-gradient(circle at 14% 18%, rgba(14, 165, 233, 0.34) 0%, transparent 45%),
+        radial-gradient(circle at 86% 22%, rgba(245, 158, 11, 0.22) 0%, transparent 42%),
+        radial-gradient(circle at 78% 84%, rgba(99, 102, 241, 0.32) 0%, transparent 48%),
+        radial-gradient(circle at 22% 82%, rgba(16, 185, 129, 0.16) 0%, transparent 45%),
+        linear-gradient(135deg, #070D1F 0%, #0F1E3D 48%, #15193B 100%) !important;
     background-attachment: fixed !important;
 }
 [data-testid="stAppViewContainer"], [data-testid="stMain"], [data-testid="stHeader"] {
@@ -1209,7 +1211,7 @@ def page_login():
         '<div class="login-topbar">'
         '<div class="login-brand">'
         '<span class="login-brand-badge">&#8383;</span>'
-        'Bitcoin Flow Intelligence · Security &amp; AML Screening'
+        'Bitcoin Flow Intelligence · Transaction Security Scanner'
         '</div>'
         '<div class="login-pills">'
         '<span class="login-pill login-pill-green">● ENGINE ONLINE</span>'
@@ -1225,7 +1227,7 @@ def page_login():
     with left_col:
         st.markdown(
             '<div>'
-            '<h1 class="sec-title">Enterprise Bitcoin Transaction &amp; AML Screening</h1>'
+            '<h1 class="sec-title">Bitcoin Transaction Anomaly &amp; Security Scanner</h1>'
             '<p class="sec-lead">'
             'Detect high-risk peeling chains, synchronized twin bursts, and structural anomalies across '
             'uploaded Bitcoin transaction CSVs in real time.'
@@ -1261,7 +1263,7 @@ def page_login():
         with st.container(border=True):
             st.markdown(
                 '<div class="auth-hdr">'
-                '<p class="auth-title">Analyst Authentication Portal</p>'
+                '<p class="auth-title">User Authentication Portal</p>'
                 '<span class="auth-badge">PROTECTED SESSION</span>'
                 '</div>',
                 unsafe_allow_html=True,
@@ -1272,8 +1274,16 @@ def page_login():
             with tab_create:
                 with st.form("create_profile_form"):
                     name = st.text_input("Full Name", placeholder="e.g. Naina Sharma")
-                    username = st.text_input("Work Email or Username", placeholder="e.g. naina@aml-desk.io")
-                    role = st.selectbox("Role", ["AML Analyst", "Compliance Officer", "Security Researcher", "Auditor"])
+                    username = st.text_input("Email or Username", placeholder="e.g. naina@btc-scanner.io")
+                    role = st.selectbox(
+                        "Role",
+                        [
+                            "Transaction Investigator",
+                            "Blockchain Security Engineer",
+                            "Exchange / Wallet Operator",
+                            "Individual User",
+                        ],
+                    )
                     c_pw1, c_pw2 = st.columns(2)
                     password = c_pw1.text_input("Password", type="password", placeholder="8+ chars, alphanumeric")
                     confirm_pw = c_pw2.text_input("Confirm Password", type="password", placeholder="Repeat password")
