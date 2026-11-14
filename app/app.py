@@ -38,6 +38,7 @@ LEVEL_STYLE = {
 
 st.set_page_config(
     page_title="Bitcoin Flow Intelligence",
+    page_icon=":material/security:",
     layout="wide",
     initial_sidebar_state="expanded",
 )
@@ -51,11 +52,16 @@ st.markdown("""
     border-radius: 12px;
     padding: 14px 18px;
     box-shadow: 0 4px 14px rgba(0, 0, 0, 0.25);
+    transition: border-color 0.2s ease, transform 0.2s ease;
+}
+[data-testid="stMetric"]:hover {
+    border-color: #38BDF8;
+    transform: translateY(-2px);
 }
 [data-testid="stMetricLabel"] { color: #94A3B8 !important; font-size: 0.85rem !important; }
 [data-testid="stMetricValue"] { color: #F8FAFC !important; font-weight: 700 !important; }
 .card {
-    background: #111827;
+    background: linear-gradient(180deg, #111827 0%, #0F172A 100%);
     border: 1px solid #1E293B;
     border-top: 2px solid #38BDF8;
     border-radius: 12px;
@@ -64,9 +70,19 @@ st.markdown("""
     display: flex;
     flex-direction: column;
     justify-content: flex-start;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
 }
 .card h4 { margin: 0 0 8px 0; color: #38BDF8; font-size: 1rem; }
 .card p { margin: 0; color: #CBD5E1; font-size: 0.9rem; line-height: 1.5; }
+.brand-box {
+    padding: 10px 12px;
+    border-radius: 10px;
+    background: linear-gradient(135deg, rgba(56, 189, 248, 0.12), rgba(99, 102, 241, 0.08));
+    border: 1px solid rgba(56, 189, 248, 0.25);
+    margin-bottom: 12px;
+}
+.brand-title { font-weight: 700; font-size: 0.98rem; color: #F8FAFC; margin: 0; }
+.brand-sub { font-size: 0.78rem; color: #94A3B8; margin: 2px 0 0 0; }
 </style>
 """, unsafe_allow_html=True)
 
@@ -368,8 +384,8 @@ def page_home():
     )
     with b_right:
         q1, q2 = st.columns(2)
-        q1.page_link(PAGES["queue"], label="Full Queue", use_container_width=True)
-        q2.page_link(PAGES["chains"], label=f"Chains ({SUM['chains']})", use_container_width=True)
+        q1.page_link(PAGES["queue"], label="Full Queue", icon=":material/arrow_forward:", use_container_width=True)
+        q2.page_link(PAGES["chains"], label=f"Chains ({SUM['chains']})", icon=":material/hub:", use_container_width=True)
 
     if section == "How It Works":
         a, b, c = st.columns(3, gap="medium")
@@ -467,9 +483,9 @@ def page_queue():
         e1, e2 = st.columns(2)
         sar_bundle = "\n---\n\n".join(build_sar_text(row) for _, row in v.head(25).iterrows())
         e1.download_button("Export Top 25 Case Briefs (.md)", sar_bundle, "top25_case_briefs.md",
-                           "text/markdown", use_container_width=True)
+                           "text/markdown", icon=":material/description:", use_container_width=True)
         e2.download_button("Export Ranked Flows (.csv)", v[cols].to_csv(index=False),
-                           "ranked_flows.csv", "text/csv", use_container_width=True)
+                           "ranked_flows.csv", "text/csv", icon=":material/download:", use_container_width=True)
 
         rows = event.selection.rows
         if not rows:
@@ -541,9 +557,10 @@ def detail(r):
             "total_BTC": float(r[AMOUNT]), "reasons": r["why_flagged"].split(" | "),
             "chain_id": None if pd.isna(r["chain_id"]) else int(r["chain_id"]),
         }, indent=2)
-        e1.download_button("Case JSON", case_json, f"case_{tx_id}.json", "application/json", use_container_width=True)
+        e1.download_button("Case JSON", case_json, f"case_{tx_id}.json", "application/json",
+                           icon=":material/code:", use_container_width=True)
         e2.download_button("SAR Brief (.md)", build_sar_text(r), f"SAR_{tx_id}.md", "text/markdown",
-                           use_container_width=True)
+                           icon=":material/description:", use_container_width=True)
 
     with right:
         st.markdown("##### Money-Flow Neighbourhood")
@@ -724,10 +741,11 @@ def page_scan():
             type=["csv"],
         )
         c2.write("")
-        run_demo = c2.button("Run Demo on Sample (60 Txs)", use_container_width=True)
+        run_demo = c2.button("Run Demo on Sample (60 Txs)", icon=":material/play_arrow:", use_container_width=True)
         if sample_path.exists():
             c2.download_button("Download Sample CSV", sample_path.read_bytes(),
-                               "sample_bitcoin_txs.csv", "text/csv", use_container_width=True)
+                               "sample_bitcoin_txs.csv", "text/csv", icon=":material/download:",
+                               use_container_width=True)
 
     df_in = None
     if up is not None:
@@ -786,11 +804,19 @@ def page_scan():
 
 
 PAGES = {
-    "home": st.Page(page_home, title="Command Center", default=True),
-    "queue": st.Page(page_queue, title="Ranked Flows", url_path="queue"),
-    "chains": st.Page(page_chains, title="Suspicious Chains", url_path="chains"),
-    "proof": st.Page(page_proof, title="Model & Drift Lab", url_path="lab"),
-    "scan": st.Page(page_scan, title="Scan Your CSV", url_path="scan"),
+    "home": st.Page(page_home, title="Command Center", icon=":material/dashboard:", default=True),
+    "queue": st.Page(page_queue, title="Ranked Flows", icon=":material/format_list_numbered:", url_path="queue"),
+    "chains": st.Page(page_chains, title="Suspicious Chains", icon=":material/hub:", url_path="chains"),
+    "proof": st.Page(page_proof, title="Model & Drift Lab", icon=":material/monitoring:", url_path="lab"),
+    "scan": st.Page(page_scan, title="Scan Your CSV", icon=":material/upload_file:", url_path="scan"),
 }
+with st.sidebar:
+    st.markdown(
+        '<div class="brand-box">'
+        '<p class="brand-title">Bitcoin Flow Intelligence</p>'
+        '<p class="brand-sub">AML & Anomaly Detection</p>'
+        '</div>',
+        unsafe_allow_html=True,
+    )
 nav = st.navigation(list(PAGES.values()))
 nav.run()
