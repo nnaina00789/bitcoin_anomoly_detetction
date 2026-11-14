@@ -1,0 +1,39 @@
+{
+  "chosen_model": "Hybrid: look-alike + family (w=0.7)",
+  "weight_lookalike": 0.7,
+  "val_PR-AUC": 0.825,
+  "test_transactions": 67504,
+  "test_known": 16670,
+  "test_known_illicit": 1083,
+  "flagged": 300,
+  "flag_rate_%": 0.55,
+  "recall_at_flag_%": 5.6,
+  "labels_used": 500,
+  "PR-AUC_final": 0.38,
+  "PR-AUC_baseline": 0.044,
+  "PR-AUC_random": 0.065,
+  "PR-AUC_final_5seed": [
+    0.405,
+    0.026
+  ],
+  "P@100_final": 0.68,
+  "P@100_baseline": 0.0,
+  "P@500_final": 0.618,
+  "P@500_baseline": 0.0,
+  "verified_precision_final": [
+    0.55,
+    0.452,
+    0.644,
+    100,
+    100
+  ],
+  "verified_precision_baseline": [
+    0.0,
+    0.0,
+    0.037,
+    100,
+    100
+  ],
+  "chains": 16,
+  "threshold": 0.951647745202363
+}

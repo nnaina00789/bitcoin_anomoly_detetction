@@ -1,0 +1,201 @@
+method,band,rank,txId,Time step,total_BTC,score,outcome
+Our model,Rank 1-50,14,115108227,38,19.69468369,96.4,Confirmed legitimate
+Our model,Rank 1-50,40,71989382,42,0.06953847,95.5,Confirmed illicit
+Our model,Rank 1-50,31,162437519,39,0.04408372,95.6,Confirmed illicit
+Our model,Rank 1-50,46,71988707,42,0.15034766,95.5,Confirmed illicit
+Our model,Rank 1-50,18,116884909,38,12.71261087,95.9,Confirmed legitimate
+Our model,Rank 1-50,49,12662937,41,0.03067436,95.5,Confirmed illicit
+Our model,Rank 1-50,27,71988430,42,0.00782399,95.7,Confirmed illicit
+Our model,Rank 1-50,26,71988771,42,0.11714039,95.7,Confirmed illicit
+Our model,Rank 1-50,33,73003883,42,0.02363005,95.6,Confirmed illicit
+Our model,Rank 1-50,20,155621616,45,15.39352042,95.8,Confirmed legitimate
+Our model,Rank 1-50,13,140419612,45,14.202553720000001,96.4,Confirmed legitimate
+Our model,Rank 1-50,5,114497442,38,26.3965669,97.5,Confirmed legitimate
+Our model,Rank 1-50,38,115108118,38,19.81475477,95.6,Confirmed legitimate
+Our model,Rank 1-50,9,115952203,38,13.90227572,96.9,Confirmed legitimate
+Our model,Rank 1-50,4,115108121,38,19.78505034,97.5,Confirmed legitimate
+Our model,Rank 1-50,7,115106112,38,12.30890694,97.2,Confirmed legitimate
+Our model,Rank 1-50,42,71990813,42,0.16010865,95.5,Confirmed illicit
+Our model,Rank 1-50,47,195503362,46,19.97054972,95.5,Confirmed legitimate
+Our model,Rank 1-50,48,73002476,42,0.13758588,95.5,Confirmed illicit
+Our model,Rank 1-50,16,155627660,45,17.82849222,96.2,Confirmed legitimate
+Our model,Rank 1-50,10,116884797,38,13.03343681,96.6,Confirmed legitimate
+Our model,Rank 1-50,17,116205436,38,13.75985852,96.1,Confirmed legitimate
+Our model,Rank 1-50,25,71988421,42,0.04515623,95.7,Confirmed illicit
+Our model,Rank 1-50,35,73003888,42,0.009050560000000001,95.6,Confirmed illicit
+Our model,Rank 1-50,32,73003343,42,0.02485715,95.6,Confirmed illicit
+Our model,Rank 1-50,1,114497725,38,21.81958105,97.8,Confirmed legitimate
+Our model,Rank 1-50,45,105858022,44,19.048987190000002,95.5,Confirmed legitimate
+Our model,Rank 1-50,28,115286481,38,13.91080689,95.7,Confirmed legitimate
+Our model,Rank 1-50,34,73002816,42,0.0038538,95.6,Confirmed illicit
+Our model,Rank 1-50,6,116207101,38,13.14336327,97.3,Confirmed legitimate
+Our model,Rank 51-200,124,67572674,35,0.02862559,94.8,Confirmed illicit
+Our model,Rank 51-200,69,67682157,35,0.01212497,95.3,Confirmed illicit
+Our model,Rank 51-200,169,106855390,44,18.1455737,94.3,Confirmed legitimate
+Our model,Rank 51-200,129,105858026,44,19.08076122,94.7,Confirmed legitimate
+Our model,Rank 51-200,127,69713600,35,0.02901779,94.8,Confirmed illicit
+Our model,Rank 51-200,82,67661738,35,0.00158956,95.2,Confirmed illicit
+Our model,Rank 51-200,115,73220626,42,0.02888864,94.9,Confirmed illicit
+Our model,Rank 51-200,192,71748300,42,0.00591384,94.1,Confirmed illicit
+Our model,Rank 51-200,119,105428618,44,19.81151714,94.9,Confirmed legitimate
+Our model,Rank 51-200,133,12780332,41,0.01002884,94.7,Confirmed illicit
+Our model,Rank 51-200,161,38365030,41,0.03853946,94.3,Confirmed illicit
+Our model,Rank 51-200,63,73000085,42,0.07055615,95.4,Confirmed illicit
+Our model,Rank 51-200,87,73000659,42,0.0159788,95.2,Confirmed illicit
+Our model,Rank 51-200,60,105847701,44,17.2068679,95.4,Confirmed legitimate
+Our model,Rank 51-200,70,68980597,35,0.049246490000000004,95.3,Confirmed illicit
+Our model,Rank 51-200,107,71988422,42,0.0599722,95.0,Confirmed illicit
+Our model,Rank 51-200,155,71994046,42,0.02972217,94.4,Confirmed illicit
+Our model,Rank 51-200,120,115108123,38,19.7376409,94.9,Confirmed legitimate
+Our model,Rank 51-200,106,68988797,35,0.0091868,95.0,Confirmed illicit
+Our model,Rank 51-200,183,203174429,36,11.08794752,94.2,Confirmed legitimate
+Our model,Rank 51-200,80,12661223,41,0.00131748,95.2,Confirmed illicit
+Our model,Rank 51-200,178,71990615,42,0.01387015,94.2,Confirmed illicit
+Our model,Rank 51-200,77,73001042,42,0.013717110000000001,95.3,Confirmed illicit
+Our model,Rank 51-200,179,71449573,42,0.01788637,94.2,Confirmed illicit
+Our model,Rank 51-200,182,71989681,42,0.02334582,94.2,Confirmed illicit
+Our model,Rank 51-200,196,71450194,42,0.00960673,94.1,Confirmed illicit
+Our model,Rank 51-200,159,162433829,39,0.050959330000000004,94.4,Confirmed illicit
+Our model,Rank 51-200,194,105847885,44,14.10647091,94.1,Confirmed legitimate
+Our model,Rank 51-200,96,73002538,42,0.04294292,95.1,Confirmed illicit
+Our model,Rank 51-200,81,71748458,42,0.00566481,95.2,Confirmed illicit
+Our model,Rank 51-200,73,70418770,35,0.09473757000000001,95.3,Confirmed illicit
+Our model,Rank 51-200,66,181202368,45,15.37014102,95.4,Confirmed legitimate
+Our model,Rank 51-200,116,161399330,39,0.01671121,94.9,Confirmed illicit
+Our model,Rank 51-200,62,68954996,35,0.08582372,95.4,Confirmed illicit
+Our model,Rank 51-200,93,105848346,44,19.896373750000002,95.2,Confirmed legitimate
+Our model,Rank 201-500,404,116069421,38,0.03466898,92.0,Confirmed illicit
+Our model,Rank 201-500,467,105857516,44,18.28839741,91.2,Confirmed legitimate
+Our model,Rank 201-500,353,73267361,42,0.00819916,92.5,Confirmed legitimate
+Our model,Rank 201-500,210,12779661,41,0.00091424,94.0,Confirmed illicit
+Our model,Rank 201-500,434,106816574,44,15.45252393,91.6,Confirmed legitimate
+Our model,Rank 201-500,427,161414170,39,0.04918348,91.7,Confirmed illicit
+Our model,Rank 201-500,397,70361273,35,0.047083980000000004,92.1,Confirmed illicit
+Our model,Rank 201-500,310,70361269,35,0.059653740000000004,93.0,Confirmed illicit
+Our model,Rank 201-500,206,71989670,42,0.02182472,94.0,Confirmed illicit
+Our model,Rank 201-500,376,106393280,44,19.48179282,92.3,Confirmed legitimate
+Our model,Rank 201-500,438,199937031,36,0.36578074,91.6,Confirmed legitimate
+Our model,Rank 201-500,258,151200949,39,0.1481,93.6,Confirmed legitimate
+Our model,Rank 201-500,419,12782435,41,0.03916924,91.8,Confirmed illicit
+Our model,Rank 201-500,246,115723284,38,0.34599968000000003,93.7,Confirmed illicit
+Our model,Rank 201-500,383,106814876,44,13.658929800000001,92.2,Confirmed legitimate
+Our model,Rank 201-500,422,116055498,38,0.10543464,91.8,Confirmed illicit
+Our model,Rank 201-500,490,105978945,44,19.63096784,90.8,Confirmed legitimate
+Our model,Rank 201-500,412,37967815,46,14.49642051,91.9,Confirmed legitimate
+Our model,Rank 201-500,349,106413601,44,14.01351707,92.5,Confirmed legitimate
+Our model,Rank 201-500,366,72313847,42,9.53643842,92.3,Confirmed legitimate
+Our model,Rank 201-500,279,72631015,42,0.02266244,93.3,Confirmed illicit
+Our model,Rank 201-500,314,27064182,41,9.29491616,93.0,Confirmed legitimate
+Our model,Rank 201-500,450,4647712,48,0.00412808,91.4,Confirmed legitimate
+Our model,Rank 201-500,451,106413922,44,17.03847955,91.4,Confirmed legitimate
+Our model,Rank 201-500,305,71988781,42,0.01222396,93.1,Confirmed illicit
+Our model,Rank 201-500,243,115726274,38,10.91799307,93.8,Confirmed legitimate
+Our model,Rank 201-500,482,115723278,38,0.0829149,90.9,Confirmed illicit
+Our model,Rank 201-500,496,200774471,36,19.117843660000002,90.8,Confirmed legitimate
+Our model,Rank 201-500,358,73245940,42,0.01136475,92.4,Confirmed legitimate
+Our model,Rank 201-500,439,96569547,40,0.03636219,91.6,Confirmed illicit
+Our model,Rank 201-500,218,38370042,41,0.05889024,93.9,Confirmed illicit
+Our model,Rank 201-500,365,155720885,45,13.70578747,92.4,Confirmed legitimate
+Our model,Rank 201-500,234,71450339,42,0.01575892,93.8,Confirmed illicit
+Our model,Rank 201-500,225,70335041,35,0.44161551,93.9,Confirmed illicit
+Our model,Rank 201-500,416,114714734,38,1.75286486,91.9,Confirmed legitimate
+Amount threshold (baseline),Rank 1-50,14,28603448,36,2081.02485957,2081.02485957,Confirmed legitimate
+Amount threshold (baseline),Rank 1-50,40,9517432,39,1463.94197761,1463.94197761,Confirmed legitimate
+Amount threshold (baseline),Rank 1-50,31,76605068,36,1569.80996168,1569.80996168,Confirmed legitimate
+Amount threshold (baseline),Rank 1-50,46,38876099,36,1360.52625001,1360.52625001,Confirmed legitimate
+Amount threshold (baseline),Rank 1-50,18,66590338,36,2019.95632813,2019.95632813,Confirmed legitimate
+Amount threshold (baseline),Rank 1-50,49,74432593,36,1269.66417265,1269.66417265,Confirmed legitimate
+Amount threshold (baseline),Rank 1-50,27,25493733,36,1597.3951575400001,1597.3951575400001,Confirmed legitimate
+Amount threshold (baseline),Rank 1-50,26,16713740,36,1600.44677227,1600.44677227,Confirmed legitimate
+Amount threshold (baseline),Rank 1-50,33,24775820,39,1537.24627552,1537.24627552,Confirmed legitimate
+Amount threshold (baseline),Rank 1-50,20,13827311,36,1659.43772502,1659.43772502,Confirmed legitimate
+Amount threshold (baseline),Rank 1-50,13,21352615,36,2184.08951526,2184.08951526,Confirmed legitimate
+Amount threshold (baseline),Rank 1-50,5,69599555,35,2855.63386277,2855.63386277,Confirmed legitimate
+Amount threshold (baseline),Rank 1-50,38,219555853,47,1475.78943269,1475.78943269,Confirmed legitimate
+Amount threshold (baseline),Rank 1-50,9,13329538,36,2225.36961139,2225.36961139,Confirmed legitimate
+Amount threshold (baseline),Rank 1-50,4,100804290,35,3999.99933114,3999.99933114,Confirmed legitimate
+Amount threshold (baseline),Rank 1-50,7,200631542,36,2500.00011727,2500.00011727,Confirmed legitimate
+Amount threshold (baseline),Rank 1-50,42,17997502,39,1433.70897505,1433.70897505,Confirmed legitimate
+Amount threshold (baseline),Rank 1-50,47,52084569,36,1319.59128427,1319.59128427,Confirmed legitimate
+Amount threshold (baseline),Rank 1-50,48,82172275,36,1309.29647241,1309.29647241,Confirmed legitimate
+Amount threshold (baseline),Rank 1-50,16,26743269,36,2050.18547041,2050.18547041,Confirmed legitimate
+Amount threshold (baseline),Rank 1-50,10,43153369,36,2219.75999524,2219.75999524,Confirmed legitimate
+Amount threshold (baseline),Rank 1-50,17,72504994,36,2024.42014337,2024.42014337,Confirmed legitimate
+Amount threshold (baseline),Rank 1-50,25,8893820,37,1612.34020201,1612.34020201,Confirmed legitimate
+Amount threshold (baseline),Rank 1-50,35,51113675,39,1521.91015979,1521.91015979,Confirmed legitimate
+Amount threshold (baseline),Rank 1-50,32,2067049,39,1556.85772617,1556.85772617,Confirmed legitimate
+Amount threshold (baseline),Rank 1-50,1,96477709,49,6335.201666,6335.201666,Confirmed legitimate
+Amount threshold (baseline),Rank 1-50,45,5923264,36,1369.19611712,1369.19611712,Confirmed legitimate
+Amount threshold (baseline),Rank 1-50,28,23135269,37,1591.87484958,1591.87484958,Confirmed legitimate
+Amount threshold (baseline),Rank 1-50,34,8823943,41,1533.96069237,1533.96069237,Confirmed legitimate
+Amount threshold (baseline),Rank 1-50,6,69727711,35,2812.13769687,2812.13769687,Confirmed legitimate
+Amount threshold (baseline),Rank 51-200,124,105979312,44,597.21177548,597.21177548,Confirmed legitimate
+Amount threshold (baseline),Rank 51-200,69,12676885,41,917.38486963,917.38486963,Confirmed legitimate
+Amount threshold (baseline),Rank 51-200,169,2364754,35,516.16983183,516.16983183,Confirmed legitimate
+Amount threshold (baseline),Rank 51-200,129,13538271,35,578.36937465,578.36937465,Confirmed legitimate
+Amount threshold (baseline),Rank 51-200,127,105802057,44,590.10120925,590.10120925,Confirmed legitimate
+Amount threshold (baseline),Rank 51-200,82,3279974,40,789.50007476,789.50007476,Confirmed legitimate
+Amount threshold (baseline),Rank 51-200,115,105433236,44,620.21171771,620.21171771,Confirmed legitimate
+Amount threshold (baseline),Rank 51-200,192,114488570,38,483.95712028,483.95712028,Confirmed legitimate
+Amount threshold (baseline),Rank 51-200,119,9534486,40,605.32691357,605.32691357,Confirmed legitimate
+Amount threshold (baseline),Rank 51-200,133,15984364,35,568.40580677,568.40580677,Confirmed legitimate
+Amount threshold (baseline),Rank 51-200,161,29202276,37,524.11096234,524.11096234,Confirmed legitimate
+Amount threshold (baseline),Rank 51-200,63,26515239,35,964.69103541,964.69103541,Confirmed legitimate
+Amount threshold (baseline),Rank 51-200,87,73327121,42,766.73562746,766.73562746,Confirmed legitimate
+Amount threshold (baseline),Rank 51-200,60,27529062,42,1062.15180381,1062.15180381,Confirmed legitimate
+Amount threshold (baseline),Rank 51-200,70,54885883,35,901.8061823300001,901.8061823300001,Confirmed legitimate
+Amount threshold (baseline),Rank 51-200,107,54936064,35,661.896567,661.896567,Confirmed legitimate
+Amount threshold (baseline),Rank 51-200,155,54885952,35,528.62455549,528.62455549,Confirmed legitimate
+Amount threshold (baseline),Rank 51-200,120,54721593,35,603.4932290200001,603.4932290200001,Confirmed legitimate
+Amount threshold (baseline),Rank 51-200,106,6989909,40,662.67518891,662.67518891,Confirmed legitimate
+Amount threshold (baseline),Rank 51-200,183,67548722,35,499.9988,499.9988,Confirmed legitimate
+Amount threshold (baseline),Rank 51-200,80,106732211,44,818.08931593,818.08931593,Confirmed legitimate
+Amount threshold (baseline),Rank 51-200,178,94264510,43,499.999322,499.999322,Confirmed legitimate
+Amount threshold (baseline),Rank 51-200,77,55049307,44,836.6030721,836.6030721,Confirmed legitimate
+Amount threshold (baseline),Rank 51-200,179,106307477,44,499.999322,499.999322,Confirmed legitimate
+Amount threshold (baseline),Rank 51-200,182,94266065,43,499.999322,499.999322,Confirmed legitimate
+Amount threshold (baseline),Rank 51-200,196,54896381,35,477.29411337,477.29411337,Confirmed legitimate
+Amount threshold (baseline),Rank 51-200,159,105805015,44,524.79476921,524.79476921,Confirmed legitimate
+Amount threshold (baseline),Rank 51-200,194,91867614,43,481.49181295,481.49181295,Confirmed legitimate
+Amount threshold (baseline),Rank 51-200,96,7952333,40,708.93060409,708.93060409,Confirmed legitimate
+Amount threshold (baseline),Rank 51-200,81,51674926,44,798.6742081900001,798.6742081900001,Confirmed legitimate
+Amount threshold (baseline),Rank 51-200,73,5427127,42,839.54781615,839.54781615,Confirmed legitimate
+Amount threshold (baseline),Rank 51-200,66,6978680,40,951.05916159,951.05916159,Confirmed legitimate
+Amount threshold (baseline),Rank 51-200,116,54886134,35,615.9933592900001,615.9933592900001,Confirmed legitimate
+Amount threshold (baseline),Rank 51-200,62,106775444,44,1000.0100002,1000.0100002,Confirmed legitimate
+Amount threshold (baseline),Rank 51-200,93,55256205,35,739.15300958,739.15300958,Confirmed legitimate
+Amount threshold (baseline),Rank 201-500,404,106360921,44,231.9838145,231.9838145,Confirmed legitimate
+Amount threshold (baseline),Rank 201-500,467,77148660,36,199.68375063,199.68375063,Confirmed legitimate
+Amount threshold (baseline),Rank 201-500,353,72373063,42,266.42906638,266.42906638,Confirmed legitimate
+Amount threshold (baseline),Rank 201-500,210,12780628,41,427.3608181,427.3608181,Confirmed legitimate
+Amount threshold (baseline),Rank 201-500,434,196089284,46,209.36512881000002,209.36512881000002,Confirmed legitimate
+Amount threshold (baseline),Rank 201-500,427,155582943,45,214.49739574,214.49739574,Confirmed legitimate
+Amount threshold (baseline),Rank 201-500,397,5003060,43,235.86981475000002,235.86981475000002,Confirmed legitimate
+Amount threshold (baseline),Rank 201-500,310,149691712,39,320.20610346,320.20610346,Confirmed legitimate
+Amount threshold (baseline),Rank 201-500,206,8993505,42,438.04153974,438.04153974,Confirmed legitimate
+Amount threshold (baseline),Rank 201-500,376,73427480,42,258.39997399,258.39997399,Confirmed legitimate
+Amount threshold (baseline),Rank 201-500,438,105578797,44,206.73856115,206.73856115,Confirmed legitimate
+Amount threshold (baseline),Rank 201-500,258,13402063,41,394.17659591,394.17659591,Confirmed legitimate
+Amount threshold (baseline),Rank 201-500,419,107203747,44,223.33324404,223.33324404,Confirmed legitimate
+Amount threshold (baseline),Rank 201-500,246,13401798,41,396.13444221000003,396.13444221000003,Confirmed legitimate
+Amount threshold (baseline),Rank 201-500,383,155575982,45,257.87082332,257.87082332,Confirmed legitimate
+Amount threshold (baseline),Rank 201-500,422,4387573,35,217.52630010000001,217.52630010000001,Confirmed legitimate
+Amount threshold (baseline),Rank 201-500,490,182001086,45,190.85956419000001,190.85956419000001,Confirmed legitimate
+Amount threshold (baseline),Rank 201-500,412,106403370,44,226.11635773,226.11635773,Confirmed legitimate
+Amount threshold (baseline),Rank 201-500,349,37263284,44,270.64247311,270.64247311,Confirmed legitimate
+Amount threshold (baseline),Rank 201-500,366,73143856,42,260.91581041,260.91581041,Confirmed legitimate
+Amount threshold (baseline),Rank 201-500,279,148867642,39,388.83384282000003,388.83384282000003,Confirmed legitimate
+Amount threshold (baseline),Rank 201-500,314,156156054,45,313.58066268,313.58066268,Confirmed legitimate
+Amount threshold (baseline),Rank 201-500,450,107152411,44,200.18163645,200.18163645,Confirmed legitimate
+Amount threshold (baseline),Rank 201-500,451,261472203,44,200.12130459,200.12130459,Confirmed legitimate
+Amount threshold (baseline),Rank 201-500,305,155647158,45,335.54828886,335.54828886,Confirmed legitimate
+Amount threshold (baseline),Rank 201-500,243,13401793,41,397.3142661,397.3142661,Confirmed legitimate
+Amount threshold (baseline),Rank 201-500,482,181988893,45,192.5525795,192.5525795,Confirmed legitimate
+Amount threshold (baseline),Rank 201-500,496,47066538,42,189.21691002,189.21691002,Confirmed legitimate
+Amount threshold (baseline),Rank 201-500,358,73143850,42,265.34836762000003,265.34836762000003,Confirmed legitimate
+Amount threshold (baseline),Rank 201-500,439,11106276,37,205.97347161000002,205.97347161000002,Confirmed legitimate
+Amount threshold (baseline),Rank 201-500,218,14182114,39,405.09998098,405.09998098,Confirmed legitimate
+Amount threshold (baseline),Rank 201-500,365,11193869,45,261.16520893,261.16520893,Confirmed legitimate
+Amount threshold (baseline),Rank 201-500,234,17303565,41,399.37171517,399.37171517,Confirmed legitimate
+Amount threshold (baseline),Rank 201-500,225,12678323,41,399.7774071,399.7774071,Confirmed legitimate
+Amount threshold (baseline),Rank 201-500,416,106803479,44,224.73964073,224.73964073,Confirmed legitimate

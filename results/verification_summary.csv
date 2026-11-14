@@ -1,0 +1,9 @@
+method,band,sampled,confirmable,confirmed_illicit,precision,ci_low,ci_high
+Amount threshold (baseline),Rank 1-50,30,30,0,0.0,0.0,0.114
+Amount threshold (baseline),Rank 201-500,35,35,0,0.0,0.0,0.099
+Amount threshold (baseline),Rank 51-200,35,35,0,0.0,0.0,0.099
+Our model,Rank 1-50,30,30,13,0.433,0.274,0.608
+Our model,Rank 201-500,35,35,16,0.457,0.305,0.618
+Our model,Rank 51-200,35,35,26,0.743,0.579,0.858
+Amount threshold (baseline),All sampled,100,100,0,0.0,0.0,0.037
+Our model,All sampled,100,100,55,0.55,0.452,0.644

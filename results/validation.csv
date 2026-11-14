@@ -1,0 +1,11 @@
+model,val_PR-AUC,val_std,chosen
+Hybrid: look-alike + family (w=0.7),0.825,0.019,True
+Hybrid: look-alike + family (w=0.5),0.813,0.04,False
+Hybrid: look-alike + family (w=0.3),0.77,0.051,False
+Look-alike burst (no labels),0.758,0.0,False
+Hybrid: global density + family (w=0.7),0.7,0.038,False
+Hybrid: global density + family (w=0.5),0.68,0.043,False
+Global density (no labels),0.656,0.0,False
+Hybrid: global density + family (w=0.3),0.654,0.032,False
+Family risk only (old model),0.458,0.04,False
+Isolation Forest (classic outliers),0.115,0.0,False
