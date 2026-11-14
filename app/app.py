@@ -25,8 +25,8 @@ TIME, AMOUNT = "Time step", "total_BTC"
 
 LEVEL_ICON = {"High": "🔴 High", "Medium": "🟠 Medium", "Low": "🟢 Low"}
 STATUS_ICON = {
-    "Confirmed illicit": "⛔ Illicit",
-    "Confirmed legitimate": "✅ Legit",
+    "Confirmed illicit": "Illicit",
+    "Confirmed legitimate": "Legitimate",
     "Not yet investigated": "Unlabelled",
 }
 LEVEL_STYLE = {
@@ -38,7 +38,6 @@ LEVEL_STYLE = {
 
 st.set_page_config(
     page_title="Bitcoin Flow Intelligence",
-    page_icon="🛡️",
     layout="wide",
     initial_sidebar_state="expanded",
 )
@@ -102,8 +101,8 @@ def load():
             (s["family_checked"] > 0) & (s["family_illicit"] > 0),
             s["point_pct"] >= 0.97,
         ],
-        ["🕸️ Linked Chain", "🔁 Twin Burst", "👥 Risky Group", "⚡ Rare Shape"],
-        default="📊 Normal",
+        ["Linked Chain", "Twin Burst", "Risky Group", "Rare Shape"],
+        default="Normal",
     )
     s["Flow"] = s["n_senders"].astype(str) + " in → " + s["n_receivers"].astype(str) + " out"
     s["Main reason"] = s["why_flagged"].str.split(" | ").str[0]
@@ -149,7 +148,7 @@ def _node_meta(tx_id):
     if tx_id in BY_ID.index:
         r = BY_ID.loc[tx_id]
         bg, fg, border = LEVEL_STYLE[r["risk_level"]]
-        tag = "⛔ Criminal" if r["status"] == "Confirmed illicit" else f"Risk {r['risk_score']:.0f}/100"
+        tag = "Confirmed Illicit" if r["status"] == "Confirmed illicit" else f"Risk {r['risk_score']:.0f}/100"
         sub = f"{r[AMOUNT]:,.3f} BTC · {tag}"
         tip = f"Tx {tx_id} | Window {int(r[TIME])} | Risk {r['risk_score']:.0f}/100 | {r[AMOUNT]:,.4f} BTC"
         return bg, fg, border, sub, tip
@@ -261,7 +260,7 @@ def legend():
 # Page 1: Command Center
 # --------------------------------------------------------------------------- #
 def page_home():
-    st.title("🛡️ Command Center")
+    st.title("Command Center")
     st.caption("Overview of scanned Bitcoin traffic, high-risk alert patterns, and detection architecture.")
 
     vp, vb = SUM["verified_precision_final"], SUM["verified_precision_baseline"]
@@ -364,15 +363,15 @@ def page_home():
     st.divider()
     b_left, b_right = st.columns([2, 1.5], vertical_alignment="center")
     section = b_left.segmented_control(
-        "Bottom section", ["🚨 Top 5 Urgent Alerts", "🧠 How It Works"],
-        default="🚨 Top 5 Urgent Alerts", label_visibility="collapsed",
+        "Bottom section", ["Top 5 Urgent Alerts", "How It Works"],
+        default="Top 5 Urgent Alerts", label_visibility="collapsed",
     )
     with b_right:
         q1, q2 = st.columns(2)
-        q1.page_link(PAGES["queue"], label="Full Queue", icon="🚨", use_container_width=True)
-        q2.page_link(PAGES["chains"], label=f"Chains ({SUM['chains']})", icon="🔗", use_container_width=True)
+        q1.page_link(PAGES["queue"], label="Full Queue", use_container_width=True)
+        q2.page_link(PAGES["chains"], label=f"Chains ({SUM['chains']})", use_container_width=True)
 
-    if section == "🧠 How It Works":
+    if section == "How It Works":
         a, b, c = st.columns(3, gap="medium")
         with a:
             st.markdown('<div class="card"><h4>1. Normal Behaviour Model</h4>'
@@ -406,10 +405,10 @@ def page_home():
 # Page 2: Ranked Flows (Investigator Workbench)
 # --------------------------------------------------------------------------- #
 def page_queue():
-    st.title("🚨 Ranked Flows")
+    st.title("Ranked Flows")
     st.caption("Statistically unusual Bitcoin flows ranked from #1 downward, plus the stratified Top-500 verification audit.")
 
-    tab_rank, tab_audit = st.tabs(["📋 Ranked Anomaly List", "🎯 Verified Sample Audit (Top 500)"])
+    tab_rank, tab_audit = st.tabs(["Ranked Anomaly List", "Verified Sample Audit (Top 500)"])
 
     with tab_rank:
         with st.container(border=True):
@@ -467,14 +466,14 @@ def page_queue():
 
         e1, e2 = st.columns(2)
         sar_bundle = "\n---\n\n".join(build_sar_text(row) for _, row in v.head(25).iterrows())
-        e1.download_button("📥 Export Top 25 Case Briefs (.md)", sar_bundle, "top25_case_briefs.md",
+        e1.download_button("Export Top 25 Case Briefs (.md)", sar_bundle, "top25_case_briefs.md",
                            "text/markdown", use_container_width=True)
-        e2.download_button("⬇️ Export Ranked Flows (.csv)", v[cols].to_csv(index=False),
+        e2.download_button("Export Ranked Flows (.csv)", v[cols].to_csv(index=False),
                            "ranked_flows.csv", "text/csv", use_container_width=True)
 
         rows = event.selection.rows
         if not rows:
-            st.info("👆 Click any row above to inspect its signal breakdown and money-flow graph.")
+            st.info("Click any row above to inspect its signal breakdown and money-flow graph.")
         else:
             detail(v.iloc[rows[0]])
 
@@ -502,7 +501,7 @@ def page_queue():
 def detail(r):
     tx_id = int(r["txId"])
     st.divider()
-    st.subheader(f"🔍 Flow Inspector · Tx {tx_id}")
+    st.subheader(f"Flow Inspector · Tx {tx_id}")
 
     a, b, c, d = st.columns(4)
     a.metric("Anomaly Score", f"{r['risk_score']:.1f} / 100")
@@ -542,8 +541,8 @@ def detail(r):
             "total_BTC": float(r[AMOUNT]), "reasons": r["why_flagged"].split(" | "),
             "chain_id": None if pd.isna(r["chain_id"]) else int(r["chain_id"]),
         }, indent=2)
-        e1.download_button("📄 Case JSON", case_json, f"case_{tx_id}.json", "application/json", use_container_width=True)
-        e2.download_button("📝 SAR Brief (.md)", build_sar_text(r), f"SAR_{tx_id}.md", "text/markdown",
+        e1.download_button("Case JSON", case_json, f"case_{tx_id}.json", "application/json", use_container_width=True)
+        e2.download_button("SAR Brief (.md)", build_sar_text(r), f"SAR_{tx_id}.md", "text/markdown",
                            use_container_width=True)
 
     with right:
@@ -560,7 +559,7 @@ def detail(r):
 # Page 3: Suspicious Chains
 # --------------------------------------------------------------------------- #
 def page_chains():
-    st.title("🔗 Suspicious Chains")
+    st.title("Suspicious Chains")
     st.write("Connected clusters of high-risk transactions passing funds directly to each other.")
     ch = D["chains"].copy()
     if ch.empty:
@@ -590,7 +589,7 @@ def page_chains():
         },
     )
     if not event.selection.rows:
-        st.info("👆 Click any chain above to inspect its flow graph.")
+        st.info("Click any chain above to inspect its flow graph.")
         return
 
     cid = ch.iloc[event.selection.rows[0]]["chain_id"]
@@ -598,7 +597,7 @@ def page_chains():
     st.subheader(f"Chain #{int(cid)} · {len(members)} connected transactions")
     render_chain_flow(members)
     legend()
-    st.download_button(f"⬇️ Export Chain #{int(cid)} CSV", members.to_csv(index=False),
+    st.download_button(f"Export Chain #{int(cid)} CSV", members.to_csv(index=False),
                        f"chain_{int(cid)}.csv", "text/csv")
     st.dataframe(
         members[["rank", "Level", "txId", TIME, AMOUNT, "risk_score", "Pattern", "Main reason"]],
@@ -619,7 +618,7 @@ def page_chains():
 # Page 4: Model & Drift Lab
 # --------------------------------------------------------------------------- #
 def page_proof():
-    st.title("📊 Model & Drift Lab")
+    st.title("Model & Drift Lab")
     st.write("Evaluation on **untouched test windows 35–49**, plus an interactive alert-threshold simulator.")
 
     st.header("1. Interactive Alert Budget Simulator")
@@ -709,7 +708,7 @@ def page_proof():
 # Page 5: Scan Your CSV (Live ML Inference)
 # --------------------------------------------------------------------------- #
 def page_scan():
-    st.title("⚡ Scan Your CSV")
+    st.title("Scan Your CSV")
     st.caption("Upload any Bitcoin transaction CSV to run the trained anomaly-detection pipeline live.")
 
     bundle = load_bundle()
@@ -725,9 +724,9 @@ def page_scan():
             type=["csv"],
         )
         c2.write("")
-        run_demo = c2.button("⚡ Run Demo on Sample (60 Txs)", use_container_width=True)
+        run_demo = c2.button("Run Demo on Sample (60 Txs)", use_container_width=True)
         if sample_path.exists():
-            c2.download_button("⬇️ Download Sample CSV", sample_path.read_bytes(),
+            c2.download_button("Download Sample CSV", sample_path.read_bytes(),
                                "sample_bitcoin_txs.csv", "text/csv", use_container_width=True)
 
     df_in = None
@@ -737,7 +736,7 @@ def page_scan():
         df_in = pd.read_csv(sample_path)
 
     if df_in is None:
-        st.info("Upload a CSV above or click **⚡ Run Demo on Sample (60 Txs)** to test the live ML scanner.")
+        st.info("Upload a CSV above or click **Run Demo on Sample (60 Txs)** to test the live ML scanner.")
         return
 
     with st.spinner("Running trained scaler, PCA, Isolation Forest, K-Means & look-alike burst detector..."):
@@ -782,16 +781,16 @@ def page_scan():
             "Why Flagged": st.column_config.TextColumn("Why Flagged", width="large"),
         },
     )
-    st.download_button("⬇️ Download Scored Results (.csv)", scored.to_csv(index=False),
+    st.download_button("Download Scored Results (.csv)", scored.to_csv(index=False),
                        "scanned_transactions.csv", "text/csv")
 
 
 PAGES = {
-    "home": st.Page(page_home, title="Command Center", icon="🛡️", default=True),
-    "queue": st.Page(page_queue, title="Ranked Flows", icon="🚨", url_path="queue"),
-    "chains": st.Page(page_chains, title="Suspicious Chains", icon="🔗", url_path="chains"),
-    "proof": st.Page(page_proof, title="Model & Drift Lab", icon="📊", url_path="lab"),
-    "scan": st.Page(page_scan, title="Scan Your CSV", icon="⚡", url_path="scan"),
+    "home": st.Page(page_home, title="Command Center", default=True),
+    "queue": st.Page(page_queue, title="Ranked Flows", url_path="queue"),
+    "chains": st.Page(page_chains, title="Suspicious Chains", url_path="chains"),
+    "proof": st.Page(page_proof, title="Model & Drift Lab", url_path="lab"),
+    "scan": st.Page(page_scan, title="Scan Your CSV", url_path="scan"),
 }
 nav = st.navigation(list(PAGES.values()))
 nav.run()

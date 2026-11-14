@@ -162,8 +162,8 @@ def score_dataframe(df, bundle):
     })
     out["Pattern"] = np.select(
         [pct_look >= 0.90, risk > bundle["prior"] * 1.5, pct_point >= 0.97],
-        ["🔁 Twin Burst", "👥 Risky Group", "⚡ Rare Shape"],
-        default="📊 Normal",
+        ["Twin Burst", "Risky Group", "Rare Shape"],
+        default="Normal",
     )
     reasons = []
     for i in range(len(out)):
