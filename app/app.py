@@ -262,7 +262,7 @@ def legend():
 # --------------------------------------------------------------------------- #
 def page_home():
     st.title("🛡️ Command Center")
-    st.caption("Overview of scanned Bitcoin traffic, high-risk alert patterns, and detection architecture (test windows 35–49).")
+    st.caption("Overview of scanned Bitcoin traffic, high-risk alert patterns, and detection architecture.")
 
     vp, vb = SUM["verified_precision_final"], SUM["verified_precision_baseline"]
     c1, c2, c3, c4 = st.columns(4)
