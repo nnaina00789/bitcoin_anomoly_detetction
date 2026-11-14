@@ -6,7 +6,9 @@ import hashlib
 import hmac
 import html
 import json
+import secrets
 import sys
+import time
 from datetime import datetime
 from pathlib import Path
 
@@ -76,6 +78,10 @@ st.markdown("""
 }
 .card h4 { margin: 0 0 8px 0; color: #38BDF8; font-size: 1rem; }
 .card p { margin: 0; color: #CBD5E1; font-size: 0.9rem; line-height: 1.5; }
+[data-testid="stSidebar"] {
+    background: linear-gradient(180deg, #070C18 0%, #0B1222 100%);
+    border-right: 1px solid #1E293B;
+}
 [data-testid="stHeaderActionElements"] { display: none; }
 </style>
 """, unsafe_allow_html=True)
@@ -872,10 +878,31 @@ def page_scan():
 
 
 PROFILE_STORE = ROOT / ".profiles.json"
+MAX_LOGIN_ATTEMPTS = 5
+LOCKOUT_SECONDS = 30
 
 
-def _hash_pw(pw: str) -> str:
-    return hashlib.sha256(pw.encode("utf-8")).hexdigest()
+def _hash_pw(pw: str, salt: str | None = None) -> str:
+    salt = salt or secrets.token_hex(16)
+    digest = hashlib.pbkdf2_hmac("sha256", pw.encode("utf-8"), salt.encode("utf-8"), 120_000).hex()
+    return f"{salt}${digest}"
+
+
+def _verify_pw(pw: str, stored: str) -> bool:
+    if "$" in stored:
+        salt, expected = stored.split("$", 1)
+        actual = hashlib.pbkdf2_hmac("sha256", pw.encode("utf-8"), salt.encode("utf-8"), 120_000).hex()
+        return hmac.compare_digest(actual, expected)
+    legacy = hashlib.sha256(pw.encode("utf-8")).hexdigest()
+    return hmac.compare_digest(legacy, stored)
+
+
+def _validate_password(pw: str) -> str | None:
+    if len(pw) < 8:
+        return "Password must be at least 8 characters."
+    if not any(c.isalpha() for c in pw) or not any(c.isdigit() for c in pw):
+        return "Password must include at least one letter and one number."
+    return None
 
 
 def _load_profiles() -> dict:
@@ -903,146 +930,120 @@ def page_login():
     <style>
     .stApp {
         background:
-            radial-gradient(ellipse 75% 55% at 15% 15%, rgba(56, 189, 248, 0.24), transparent 60%),
-            radial-gradient(ellipse 70% 55% at 85% 85%, rgba(99, 102, 241, 0.26), transparent 60%),
-            radial-gradient(ellipse 45% 40% at 50% 45%, rgba(245, 158, 11, 0.09), transparent 65%),
-            repeating-linear-gradient(90deg, rgba(148, 163, 184, 0.03) 0 1px, transparent 1px 64px),
-            repeating-linear-gradient(0deg, rgba(148, 163, 184, 0.03) 0 1px, transparent 1px 64px),
-            linear-gradient(145deg, #050914 0%, #0D1730 48%, #090E20 100%) !important;
+            radial-gradient(ellipse 65% 50% at 12% 18%, rgba(56, 189, 248, 0.14), transparent 60%),
+            radial-gradient(ellipse 55% 45% at 88% 85%, rgba(59, 130, 246, 0.12), transparent 60%),
+            linear-gradient(180deg, #060B16 0%, #0A1120 100%) !important;
         background-attachment: fixed !important;
     }
     [data-testid="stAppViewContainer"], [data-testid="stMain"], [data-testid="stHeader"] {
         background: transparent !important;
     }
     [data-testid="stForm"] {
-        background: linear-gradient(160deg, rgba(17, 25, 46, 0.78), rgba(9, 14, 29, 0.88)) !important;
-        backdrop-filter: blur(22px);
-        -webkit-backdrop-filter: blur(22px);
-        border: 1px solid rgba(56, 189, 248, 0.26) !important;
-        border-radius: 20px !important;
-        padding: 26px 28px !important;
-        box-shadow:
-            0 30px 65px rgba(0, 0, 0, 0.65),
-            0 0 45px rgba(56, 189, 248, 0.10),
-            inset 0 1px 0 rgba(255, 255, 255, 0.14);
-        transform: perspective(1200px) rotateX(1.2deg);
-        transition: transform 0.35s ease, box-shadow 0.35s ease, border-color 0.35s ease;
+        background: rgba(13, 20, 36, 0.92) !important;
+        border: 1px solid #1E293B !important;
+        border-radius: 14px !important;
+        padding: 24px 26px !important;
+        box-shadow: 0 20px 50px rgba(0, 0, 0, 0.45);
     }
-    [data-testid="stForm"]:hover {
-        transform: perspective(1200px) rotateX(0deg) translateY(-3px);
-        border-color: rgba(56, 189, 248, 0.45) !important;
-        box-shadow:
-            0 36px 75px rgba(0, 0, 0, 0.75),
-            0 0 55px rgba(56, 189, 248, 0.18),
-            inset 0 1px 0 rgba(255, 255, 255, 0.20);
+    .sec-eyebrow {
+        display: inline-block;
+        padding: 5px 12px;
+        border-radius: 999px;
+        background: rgba(56, 189, 248, 0.10);
+        border: 1px solid rgba(56, 189, 248, 0.30);
+        color: #38BDF8;
+        font-size: 0.74rem;
+        font-weight: 600;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        margin-bottom: 14px;
     }
-    .vault-wrap {
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        justify-content: center;
-        padding: 36px 0 18px 0;
-        perspective: 1000px;
-        position: relative;
-    }
-    .vault-aura {
-        position: absolute;
-        width: 220px;
-        height: 220px;
-        border-radius: 50%;
-        background: radial-gradient(circle, rgba(56, 189, 248, 0.25), rgba(99, 102, 241, 0.14), transparent 70%);
-        filter: blur(22px);
-    }
-    .vault-orbit-outer {
-        position: relative;
-        width: 170px;
-        height: 170px;
-        border-radius: 50%;
-        border: 1px solid rgba(56, 189, 248, 0.35);
-        box-shadow: 0 0 30px rgba(56, 189, 248, 0.16), inset 0 0 24px rgba(56, 189, 248, 0.08);
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        transform-style: preserve-3d;
-        animation: vaultFloat 5.5s ease-in-out infinite;
-    }
-    .vault-orbit-inner {
-        width: 132px;
-        height: 132px;
-        border-radius: 50%;
-        border: 1px dashed rgba(245, 158, 11, 0.45);
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        transform: translateZ(18px);
-    }
-    .vault-coin {
-        width: 92px;
-        height: 92px;
-        border-radius: 50%;
-        background: linear-gradient(145deg, rgba(245, 158, 11, 0.25), rgba(15, 23, 42, 0.92));
-        border: 1.5px solid rgba(245, 158, 11, 0.65);
-        box-shadow:
-            0 16px 35px rgba(0, 0, 0, 0.6),
-            0 0 28px rgba(245, 158, 11, 0.28),
-            inset 0 2px 6px rgba(255, 255, 255, 0.22);
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        font-size: 2.6rem;
-        font-weight: 800;
-        color: #FBBF24;
-        text-shadow: 0 2px 18px rgba(251, 191, 36, 0.55);
-        transform: translateZ(34px);
-    }
-    .vault-title {
-        text-align: center;
-        font-size: 2.15rem;
+    .sec-title {
+        font-size: 2.35rem;
         font-weight: 700;
+        line-height: 1.15;
         letter-spacing: -0.02em;
-        background: linear-gradient(90deg, #F8FAFC 0%, #BAE6FD 55%, #818CF8 100%);
-        -webkit-background-clip: text;
-        -webkit-text-fill-color: transparent;
-        margin: 18px 0 10px 0;
+        color: #F8FAFC;
+        margin: 0 0 12px 0;
     }
-    @keyframes vaultFloat {
-        0%, 100% { transform: rotateX(14deg) rotateY(-12deg) translateY(0px); }
-        50%      { transform: rotateX(8deg) rotateY(12deg) translateY(-8px); }
+    .sec-lead {
+        color: #94A3B8;
+        font-size: 1rem;
+        line-height: 1.6;
+        margin: 0 0 24px 0;
+    }
+    .sec-pillar {
+        background: rgba(15, 23, 42, 0.65);
+        border: 1px solid #1E293B;
+        border-left: 3px solid #38BDF8;
+        border-radius: 10px;
+        padding: 13px 16px;
+        margin-bottom: 12px;
+    }
+    .sec-pillar h5 {
+        margin: 0 0 4px 0;
+        color: #F1F5F9;
+        font-size: 0.92rem;
+        font-weight: 600;
+    }
+    .sec-pillar p {
+        margin: 0;
+        color: #94A3B8;
+        font-size: 0.84rem;
+        line-height: 1.45;
     }
     </style>
     """, unsafe_allow_html=True)
 
-    _, mid, _ = st.columns([0.9, 1.35, 0.9])
-    with mid:
+    st.write("")
+    left_col, right_col = st.columns([1.08, 1.0], gap="large")
+
+    with left_col:
         st.markdown("""
-        <div class="vault-wrap">
-            <div class="vault-aura"></div>
-            <div class="vault-orbit-outer">
-                <div class="vault-orbit-inner">
-                    <div class="vault-coin">&#8383;</div>
-                </div>
+        <div style="padding: 18px 8px 0 0;">
+            <div class="sec-eyebrow">Bitcoin AML &amp; Anomaly Security</div>
+            <h1 class="sec-title">Bitcoin Flow Intelligence</h1>
+            <p class="sec-lead">
+                Screen Bitcoin transaction datasets for illicit bursts, peeling chains, and structural anomalies
+                before funds move downstream.
+            </p>
+            <div class="sec-pillar">
+                <h5>Salted PBKDF2-SHA256 Authentication</h5>
+                <p>Analyst credentials are protected with per-user random salts, 120k-iteration hashing, and brute-force lockout.</p>
             </div>
-            <div class="vault-title">Bitcoin Flow Intelligence</div>
+            <div class="sec-pillar">
+                <h5>Live CSV &amp; Multi-Signal Scoring</h5>
+                <p>Scores uploaded transaction files across 182 trained structural, fee, and burst-similarity features.</p>
+            </div>
+            <div class="sec-pillar">
+                <h5>Zero-Retention Session Processing</h5>
+                <p>Uploaded transaction CSVs are analyzed strictly in-memory for your active session and never stored on disk.</p>
+            </div>
         </div>
         """, unsafe_allow_html=True)
 
+    with right_col:
         tab_create, tab_signin = st.tabs(["Create Profile", "Sign In"])
 
         with tab_create:
             with st.form("create_profile_form"):
                 name = st.text_input("Full Name", placeholder="e.g. Naina Sharma")
-                username = st.text_input("Username or Email", placeholder="e.g. naina@aml-desk.io")
-                role = st.selectbox("Role", ["AML Analyst", "Compliance Officer", "Security Researcher", "Student / Demo"])
-                password = st.text_input("Password", type="password", placeholder="Minimum 4 characters")
+                username = st.text_input("Work Email or Username", placeholder="e.g. naina@aml-desk.io")
+                role = st.selectbox("Role", ["AML Analyst", "Compliance Officer", "Security Researcher", "Auditor"])
+                password = st.text_input("Password", type="password", placeholder="8+ chars, letters & numbers")
+                confirm_pw = st.text_input("Confirm Password", type="password", placeholder="Re-enter password")
                 submitted = st.form_submit_button(
                     "Create Profile & Open Scanner", type="primary", use_container_width=True
                 )
                 if submitted:
                     uname = username.strip().lower()
+                    pw_err = _validate_password(password)
                     if not name.strip() or not uname:
                         st.error("Please enter both your name and a username or email.")
-                    elif len(password) < 4:
-                        st.error("Password must be at least 4 characters.")
+                    elif pw_err:
+                        st.error(pw_err)
+                    elif password != confirm_pw:
+                        st.error("Passwords do not match.")
                     else:
                         profiles = _load_profiles()
                         if uname in profiles:
@@ -1061,32 +1062,49 @@ def page_login():
                                 "username": uname,
                                 "role": role,
                             }
+                            st.session_state["login_attempts"] = 0
                             st.rerun()
 
         with tab_signin:
+            lock_until = st.session_state.get("lockout_until", 0.0)
+            remaining = int(lock_until - time.time())
+            if remaining > 0:
+                st.warning(f"Too many failed sign-in attempts. Please wait {remaining}s before trying again.")
             with st.form("signin_form"):
-                login_user = st.text_input("Username or Email", key="login_user")
+                login_user = st.text_input("Work Email or Username", key="login_user")
                 login_pw = st.text_input("Password", type="password", key="login_pw")
-                signin_btn = st.form_submit_button("Sign In", type="primary", use_container_width=True)
+                signin_btn = st.form_submit_button(
+                    "Sign In", type="primary", use_container_width=True, disabled=remaining > 0
+                )
                 if signin_btn:
                     profiles = _load_profiles()
                     uname = login_user.strip().lower()
                     prof = profiles.get(uname)
-                    if prof and hmac.compare_digest(prof["password_hash"], _hash_pw(login_pw)):
+                    if prof and _verify_pw(login_pw, prof["password_hash"]):
                         st.session_state["user_profile"] = {
                             "name": prof["name"],
                             "username": uname,
                             "role": prof["role"],
                         }
+                        st.session_state["login_attempts"] = 0
+                        st.session_state.pop("lockout_until", None)
                         st.rerun()
                     else:
-                        st.error("Invalid username/email or password.")
+                        attempts = st.session_state.get("login_attempts", 0) + 1
+                        st.session_state["login_attempts"] = attempts
+                        if attempts >= MAX_LOGIN_ATTEMPTS:
+                            st.session_state["lockout_until"] = time.time() + LOCKOUT_SECONDS
+                            st.session_state["login_attempts"] = 0
+                            st.error(f"Account temporarily locked for {LOCKOUT_SECONDS}s after {MAX_LOGIN_ATTEMPTS} failed attempts.")
+                        else:
+                            left_tries = MAX_LOGIN_ATTEMPTS - attempts
+                            st.error(f"Invalid credentials. {left_tries} attempt(s) remaining before temporary lockout.")
 
-        if st.button("Continue as Guest Analyst", use_container_width=True):
+        if st.button("Continue with Demo Access", icon=":material/verified_user:", use_container_width=True):
             st.session_state["user_profile"] = {
-                "name": "Guest Analyst",
-                "username": "guest",
-                "role": "Guest",
+                "name": "Demo Analyst",
+                "username": "demo",
+                "role": "Read-Only Demo",
             }
             st.rerun()
 
@@ -1103,7 +1121,9 @@ else:
         "proof": st.Page(page_proof, title="Model & Drift Lab", icon=":material/monitoring:", url_path="lab"),
     }
     with st.sidebar:
-        st.caption(f"Signed in as **{user['name']}** ({user['role']})")
+        with st.container(border=True):
+            st.markdown(f"**{user['name']}**")
+            st.caption(f"{user['role']} · Active Session")
         if st.button("Sign Out", icon=":material/logout:", use_container_width=True):
             st.session_state.pop("user_profile", None)
             st.rerun()
