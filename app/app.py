@@ -790,12 +790,12 @@ def page_scan():
                                "sample_bitcoin_txs.csv", "text/csv", icon=":material/download:",
                                use_container_width=True)
 
-    df_in = None
     if up is not None:
-        df_in = pd.read_csv(up)
+        st.session_state["scan_df"] = pd.read_csv(up)
     elif run_demo and sample_path.exists():
-        df_in = pd.read_csv(sample_path)
+        st.session_state["scan_df"] = pd.read_csv(sample_path)
 
+    df_in = st.session_state.get("scan_df")
     if df_in is None:
         st.info("Upload a CSV above or click **Run Demo on Sample (60 Txs)** to test the live ML scanner.")
         return
@@ -821,19 +821,42 @@ def page_scan():
     k3.metric("🟠 Medium Watchlist", f"{n_med:,}", f"{n_med / max(len(scored), 1):.1%}", delta_color="off")
     k4.metric("🟢 Low / Normal", f"{n_lo:,}", f"{n_lo / max(len(scored), 1):.1%}", delta_color="off")
 
-    counts = pd.DataFrame({"Tier": ["High", "Medium", "Low"], "Count": [n_hi, n_med, n_lo]})
-    bar = alt.Chart(counts).mark_bar(cornerRadiusTopLeft=5, cornerRadiusTopRight=5, size=55).encode(
-        x=alt.X("Tier:N", sort=["High", "Medium", "Low"], title=None, axis=alt.Axis(labelAngle=0)),
-        y=alt.Y("Count:Q", title="Transactions"),
-        color=alt.Color("Tier:N", legend=None,
-                        scale=alt.Scale(domain=["High", "Medium", "Low"], range=["#EF4444", "#F59E0B", "#22C55E"])),
-        tooltip=["Tier", "Count"],
-    ).properties(height=210)
-    st.altair_chart(bar, use_container_width=True)
+    ch_l, ch_r = st.columns(2)
+    with ch_l:
+        with st.container(border=True):
+            st.caption("**Risk Tier Distribution**")
+            counts = pd.DataFrame({"Tier": ["High", "Medium", "Low"], "Count": [n_hi, n_med, n_lo]})
+            bar = alt.Chart(counts).mark_bar(cornerRadiusTopLeft=5, cornerRadiusTopRight=5, size=50).encode(
+                x=alt.X("Tier:N", sort=["High", "Medium", "Low"], title=None, axis=alt.Axis(labelAngle=0)),
+                y=alt.Y("Count:Q", title="Transactions"),
+                color=alt.Color("Tier:N", legend=None,
+                                scale=alt.Scale(domain=["High", "Medium", "Low"], range=["#EF4444", "#F59E0B", "#22C55E"])),
+                tooltip=["Tier", "Count"],
+            ).properties(height=210)
+            st.altair_chart(bar, use_container_width=True)
+
+    with ch_r:
+        with st.container(border=True):
+            st.caption("**Detected Patterns**")
+            pats = scored["Pattern"].value_counts().reset_index()
+            pats.columns = ["Pattern", "Count"]
+            pbar = alt.Chart(pats).mark_bar(cornerRadiusTopLeft=5, cornerRadiusTopRight=5, color="#38BDF8", size=46).encode(
+                x=alt.X("Pattern:N", sort="-y", title=None, axis=alt.Axis(labelAngle=0)),
+                y=alt.Y("Count:Q", title="Transactions"),
+                tooltip=["Pattern", "Count"],
+            ).properties(height=210)
+            st.altair_chart(pbar, use_container_width=True)
+
+    tier_pick = st.segmented_control(
+        "Filter by tier", ["All", "🔴 High", "🟠 Medium", "🟢 Low"],
+        default="All", label_visibility="collapsed",
+    )
+    tier_map = {"🔴 High": "High", "🟠 Medium": "Medium", "🟢 Low": "Low"}
+    view_df = scored[scored["risk_level"] == tier_map[tier_pick]] if tier_pick in tier_map else scored
 
     show_cols = ["Rank", "Tier", "txId", TIME, AMOUNT, "risk_score", "Pattern", "Why Flagged"]
     st.dataframe(
-        scored[show_cols], hide_index=True, use_container_width=True, height=380,
+        view_df[show_cols], hide_index=True, use_container_width=True, height=380,
         column_config={
             "txId": st.column_config.TextColumn("Transaction ID"),
             TIME: st.column_config.NumberColumn("Window"),
@@ -842,7 +865,7 @@ def page_scan():
             "Why Flagged": st.column_config.TextColumn("Why Flagged", width="large"),
         },
     )
-    st.download_button("Download Scored Results (.csv)", scored.to_csv(index=False),
+    st.download_button("Download Scored Results (.csv)", view_df.to_csv(index=False),
                        "scanned_transactions.csv", "text/csv")
 
 
