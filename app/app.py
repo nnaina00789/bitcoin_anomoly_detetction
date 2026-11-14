@@ -192,25 +192,161 @@ html, body, [class*="css"] {
     border-right: 1px solid #1E293B;
 }
 [data-testid="stHeaderActionElements"] { display: none; }
+.login-topbar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 12px;
+    padding: 14px 20px;
+    margin-bottom: 24px;
+    border-radius: 12px;
+    background: rgba(11, 18, 34, 0.88);
+    border: 1px solid rgba(56, 189, 248, 0.22);
+}
+.login-brand {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    color: #F8FAFC;
+    font-weight: 700;
+    font-size: 0.96rem;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+}
+.login-brand-badge {
+    width: 28px;
+    height: 28px;
+    border-radius: 8px;
+    background: linear-gradient(135deg, #0284C7, #2563EB);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    color: #F8FAFC;
+    font-weight: 800;
+    font-size: 0.95rem;
+}
+.login-pills { display: flex; gap: 8px; flex-wrap: wrap; }
+.login-pill {
+    padding: 4px 10px;
+    border-radius: 999px;
+    background: rgba(15, 23, 42, 0.9);
+    border: 1px solid #1E293B;
+    color: #94A3B8;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.71rem;
+}
+.login-pill-green {
+    border-color: rgba(16, 185, 129, 0.35);
+    color: #6EE7B7;
+    background: rgba(16, 185, 129, 0.08);
+}
+.sec-title {
+    font-size: 2.25rem;
+    font-weight: 700;
+    line-height: 1.15;
+    letter-spacing: -0.025em;
+    color: #F8FAFC;
+    margin: 0 0 10px 0;
+}
+.sec-lead {
+    color: #94A3B8;
+    font-size: 0.96rem;
+    line-height: 1.6;
+    margin: 0 0 18px 0;
+}
+.graph-preview {
+    background: linear-gradient(180deg, rgba(11, 18, 34, 0.95) 0%, rgba(7, 12, 24, 0.98) 100%);
+    border: 1px solid rgba(56, 189, 248, 0.24);
+    border-radius: 14px;
+    padding: 16px 18px;
+    margin-bottom: 16px;
+    box-shadow: 0 14px 36px rgba(0, 0, 0, 0.45);
+}
+.graph-preview-hdr {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 14px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.72rem;
+    color: #94A3B8;
+}
+.flow-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    margin-bottom: 10px;
+}
+.flow-node {
+    flex: 1;
+    padding: 10px 12px;
+    border-radius: 10px;
+    font-family: 'JetBrains Mono', monospace;
+}
+.flow-node-high {
+    background: rgba(69, 10, 10, 0.85);
+    border: 1.5px solid #EF4444;
+    color: #FCA5A5;
+}
+.flow-node-med {
+    background: rgba(69, 26, 3, 0.85);
+    border: 1.5px solid #F59E0B;
+    color: #FCD34D;
+}
+.flow-node-low {
+    background: rgba(5, 46, 22, 0.85);
+    border: 1.5px solid #22C55E;
+    color: #86EFAC;
+}
+.flow-id { font-size: 0.78rem; font-weight: 700; display: block; margin-bottom: 3px; }
+.flow-meta { font-size: 0.70rem; opacity: 0.9; display: block; font-family: 'Inter', sans-serif; }
+.flow-arrow { color: #EF4444; font-weight: 700; font-size: 1.1rem; padding: 0 2px; }
+.sec-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 10px;
+}
+.sec-tile {
+    background: rgba(15, 23, 42, 0.72);
+    border: 1px solid #1E293B;
+    border-top: 2px solid #38BDF8;
+    border-radius: 10px;
+    padding: 12px 13px;
+}
+.sec-tile h5 { margin: 0 0 4px 0; color: #F1F5F9; font-size: 0.82rem; font-weight: 600; }
+.sec-tile p { margin: 0; color: #94A3B8; font-size: 0.76rem; line-height: 1.4; }
+.auth-hdr {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 6px;
+}
+.auth-title { color: #F8FAFC; font-size: 1.18rem; font-weight: 700; margin: 0; }
+.auth-badge {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.70rem;
+    padding: 3px 9px;
+    border-radius: 6px;
+    background: rgba(56, 189, 248, 0.12);
+    border: 1px solid rgba(56, 189, 248, 0.32);
+    color: #38BDF8;
+}
 </style>
 """, unsafe_allow_html=True)
 
 
 def render_page_header(kicker: str, title: str, subtitle: str) -> None:
     st.markdown(
-        f"""
-        <div class="page-banner">
-            <div>
-                <div class="page-banner-kicker">{html.escape(kicker)}</div>
-                <h1 class="page-banner-title">{html.escape(title)}</h1>
-                <p class="page-banner-sub">{html.escape(subtitle)}</p>
-            </div>
-            <div class="page-banner-status">
-                <span class="status-dot"></span>
-                ENGINE ONLINE · 182-FEATURE HYBRID
-            </div>
-        </div>
-        """,
+        f'<div class="page-banner">'
+        f'<div>'
+        f'<div class="page-banner-kicker">{html.escape(kicker)}</div>'
+        f'<h1 class="page-banner-title">{html.escape(title)}</h1>'
+        f'<p class="page-banner-sub">{html.escape(subtitle)}</p>'
+        f'</div>'
+        f'<div class="page-banner-status"><span class="status-dot"></span>ENGINE ONLINE · 182-FEATURE HYBRID</div>'
+        f'</div>',
         unsafe_allow_html=True,
     )
 
@@ -1069,227 +1205,67 @@ def _save_profiles(profiles: dict) -> None:
 
 
 def page_login():
-    st.markdown("""
-    <style>
-    .login-topbar {
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        flex-wrap: wrap;
-        gap: 12px;
-        padding: 14px 20px;
-        margin-bottom: 24px;
-        border-radius: 12px;
-        background: rgba(11, 18, 34, 0.85);
-        border: 1px solid rgba(56, 189, 248, 0.22);
-    }
-    .login-brand {
-        display: flex;
-        align-items: center;
-        gap: 10px;
-        color: #F8FAFC;
-        font-weight: 700;
-        font-size: 0.96rem;
-        letter-spacing: 0.04em;
-        text-transform: uppercase;
-    }
-    .login-brand-badge {
-        width: 28px;
-        height: 28px;
-        border-radius: 8px;
-        background: linear-gradient(135deg, #0284C7, #2563EB);
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-        color: #F8FAFC;
-        font-weight: 800;
-        font-size: 0.95rem;
-    }
-    .login-pills {
-        display: flex;
-        gap: 8px;
-        flex-wrap: wrap;
-    }
-    .login-pill {
-        padding: 4px 10px;
-        border-radius: 999px;
-        background: rgba(15, 23, 42, 0.9);
-        border: 1px solid #1E293B;
-        color: #94A3B8;
-        font-family: 'JetBrains Mono', monospace;
-        font-size: 0.71rem;
-    }
-    .login-pill-green {
-        border-color: rgba(16, 185, 129, 0.35);
-        color: #6EE7B7;
-        background: rgba(16, 185, 129, 0.08);
-    }
-    .sec-title {
-        font-size: 2.3rem;
-        font-weight: 700;
-        line-height: 1.15;
-        letter-spacing: -0.025em;
-        color: #F8FAFC;
-        margin: 0 0 10px 0;
-    }
-    .sec-lead {
-        color: #94A3B8;
-        font-size: 0.96rem;
-        line-height: 1.6;
-        margin: 0 0 18px 0;
-    }
-    .graph-preview {
-        background: linear-gradient(180deg, rgba(11, 18, 34, 0.95) 0%, rgba(7, 12, 24, 0.98) 100%);
-        border: 1px solid rgba(56, 189, 248, 0.24);
-        border-radius: 14px;
-        padding: 16px 18px;
-        margin-bottom: 16px;
-        box-shadow: 0 14px 36px rgba(0, 0, 0, 0.45);
-    }
-    .graph-preview-hdr {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        margin-bottom: 10px;
-        font-family: 'JetBrains Mono', monospace;
-        font-size: 0.73rem;
-        color: #94A3B8;
-    }
-    .sec-grid {
-        display: grid;
-        grid-template-columns: repeat(3, 1fr);
-        gap: 10px;
-    }
-    .sec-tile {
-        background: rgba(15, 23, 42, 0.72);
-        border: 1px solid #1E293B;
-        border-top: 2px solid #38BDF8;
-        border-radius: 10px;
-        padding: 12px 13px;
-    }
-    .sec-tile h5 {
-        margin: 0 0 4px 0;
-        color: #F1F5F9;
-        font-size: 0.82rem;
-        font-weight: 600;
-    }
-    .sec-tile p {
-        margin: 0;
-        color: #94A3B8;
-        font-size: 0.76rem;
-        line-height: 1.4;
-    }
-    .auth-hdr {
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        margin-bottom: 6px;
-    }
-    .auth-title {
-        color: #F8FAFC;
-        font-size: 1.18rem;
-        font-weight: 700;
-        margin: 0;
-    }
-    .auth-badge {
-        font-family: 'JetBrains Mono', monospace;
-        font-size: 0.70rem;
-        padding: 3px 9px;
-        border-radius: 6px;
-        background: rgba(56, 189, 248, 0.12);
-        border: 1px solid rgba(56, 189, 248, 0.32);
-        color: #38BDF8;
-    }
-    </style>
-
-    <div class="login-topbar">
-        <div class="login-brand">
-            <span class="login-brand-badge">&#8383;</span>
-            Bitcoin Flow Intelligence · Security &amp; AML Screening
-        </div>
-        <div class="login-pills">
-            <span class="login-pill login-pill-green">● ENGINE ONLINE</span>
-            <span class="login-pill">PBKDF2-SHA256 · 120K ITER</span>
-            <span class="login-pill">ZERO-RETENTION CSV SCANNER</span>
-        </div>
-    </div>
-    """, unsafe_allow_html=True)
+    st.markdown(
+        '<div class="login-topbar">'
+        '<div class="login-brand">'
+        '<span class="login-brand-badge">&#8383;</span>'
+        'Bitcoin Flow Intelligence · Security &amp; AML Screening'
+        '</div>'
+        '<div class="login-pills">'
+        '<span class="login-pill login-pill-green">● ENGINE ONLINE</span>'
+        '<span class="login-pill">PBKDF2-SHA256 · 120K ITER</span>'
+        '<span class="login-pill">ZERO-RETENTION CSV SCANNER</span>'
+        '</div>'
+        '</div>',
+        unsafe_allow_html=True,
+    )
 
     left_col, right_col = st.columns([1.15, 1.0], gap="large")
 
     with left_col:
-        st.markdown("""
-        <div>
-            <h1 class="sec-title">Enterprise Bitcoin Transaction &amp; AML Screening</h1>
-            <p class="sec-lead">
-                Detect high-risk peeling chains, synchronized twin bursts, and structural anomalies across
-                uploaded Bitcoin transaction CSVs in real time.
-            </p>
-            <div class="graph-preview">
-                <div class="graph-preview-hdr">
-                    <span>LIVE THREAT TOPOLOGY · PEELING CHAIN DETECTION</span>
-                    <span style="color:#FCA5A5;">ALERT SCORE: 98.4 / 100</span>
-                </div>
-                <svg viewBox="0 0 540 155" width="100%" height="155" xmlns="http://www.w3.org/2000/svg">
-                    <defs>
-                        <marker id="arr-red" viewBox="0 0 10 10" refX="7" refY="5" markerWidth="6" markerHeight="6" orient="auto">
-                            <path d="M 0 1 L 10 5 L 0 9 z" fill="#EF4444"/>
-                        </marker>
-                        <marker id="arr-slate" viewBox="0 0 10 10" refX="7" refY="5" markerWidth="5" markerHeight="5" orient="auto">
-                            <path d="M 0 1 L 10 5 L 0 9 z" fill="#475569"/>
-                        </marker>
-                    </defs>
-                    <path d="M 118 45 C 155 45, 165 45, 200 45" stroke="#EF4444" stroke-width="2.2" fill="none" marker-end="url(#arr-red)"/>
-                    <path d="M 320 45 C 355 45, 365 45, 400 45" stroke="#EF4444" stroke-width="2.2" fill="none" marker-end="url(#arr-red)"/>
-                    <path d="M 118 45 C 155 55, 165 112, 200 112" stroke="#475569" stroke-width="1.5" stroke-dasharray="4 3" fill="none" marker-end="url(#arr-slate)"/>
-                    <path d="M 320 45 C 355 55, 365 112, 400 112" stroke="#475569" stroke-width="1.5" stroke-dasharray="4 3" fill="none" marker-end="url(#arr-slate)"/>
-
-                    <rect x="12" y="22" width="106" height="46" rx="8" fill="#450A0A" stroke="#EF4444" stroke-width="1.6"/>
-                    <text x="22" y="41" fill="#FCA5A5" font-family="monospace" font-size="11" font-weight="bold">Tx #298410</text>
-                    <text x="22" y="57" fill="#FCA5A5" font-family="sans-serif" font-size="10">14.82 BTC · 96/100</text>
-
-                    <rect x="206" y="22" width="114" height="46" rx="8" fill="#450A0A" stroke="#EF4444" stroke-width="1.6"/>
-                    <text x="216" y="41" fill="#FCA5A5" font-family="monospace" font-size="11" font-weight="bold">Tx #298894</text>
-                    <text x="216" y="57" fill="#FCA5A5" font-family="sans-serif" font-size="10">14.10 BTC · 98/100</text>
-
-                    <rect x="406" y="22" width="120" height="46" rx="8" fill="#450A0A" stroke="#EF4444" stroke-width="1.6"/>
-                    <text x="416" y="41" fill="#FCA5A5" font-family="monospace" font-size="11" font-weight="bold">Tx #299102</text>
-                    <text x="416" y="57" fill="#FCA5A5" font-family="sans-serif" font-size="10">13.45 BTC · 99/100</text>
-
-                    <rect x="206" y="92" width="114" height="42" rx="8" fill="#052E16" stroke="#22C55E" stroke-width="1.2"/>
-                    <text x="216" y="110" fill="#86EFAC" font-family="monospace" font-size="10" font-weight="bold">Peel Output #1</text>
-                    <text x="216" y="124" fill="#86EFAC" font-family="sans-serif" font-size="9.5">0.72 BTC · Low</text>
-
-                    <rect x="406" y="92" width="120" height="42" rx="8" fill="#451A03" stroke="#F59E0B" stroke-width="1.2"/>
-                    <text x="416" y="110" fill="#FCD34D" font-family="monospace" font-size="10" font-weight="bold">Burst Fan-Out</text>
-                    <text x="416" y="124" fill="#FCD34D" font-family="sans-serif" font-size="9.5">0.65 BTC · Watch</text>
-                </svg>
-            </div>
-            <div class="sec-grid">
-                <div class="sec-tile">
-                    <h5>Salted PBKDF2 Auth</h5>
-                    <p>Per-user 16-byte salt, 120k SHA-256 rounds, and brute-force lockout protection.</p>
-                </div>
-                <div class="sec-tile">
-                    <h5>182-Feature Hybrid ML</h5>
-                    <p>Combines structural outlier detection, look-alike burst scoring, and graph chains.</p>
-                </div>
-                <div class="sec-tile">
-                    <h5>Zero-Retention Scan</h5>
-                    <p>Uploaded CSV datasets are scored in-memory and never persisted to disk.</p>
-                </div>
-            </div>
-        </div>
-        """, unsafe_allow_html=True)
+        st.markdown(
+            '<div>'
+            '<h1 class="sec-title">Enterprise Bitcoin Transaction &amp; AML Screening</h1>'
+            '<p class="sec-lead">'
+            'Detect high-risk peeling chains, synchronized twin bursts, and structural anomalies across '
+            'uploaded Bitcoin transaction CSVs in real time.'
+            '</p>'
+            '<div class="graph-preview">'
+            '<div class="graph-preview-hdr">'
+            '<span>LIVE THREAT TOPOLOGY · PEELING CHAIN DETECTION</span>'
+            '<span style="color:#FCA5A5;">ALERT SCORE: 98.4 / 100</span>'
+            '</div>'
+            '<div class="flow-row">'
+            '<div class="flow-node flow-node-high"><span class="flow-id">Tx #298410</span><span class="flow-meta">14.82 BTC · Risk 96/100</span></div>'
+            '<span class="flow-arrow">→</span>'
+            '<div class="flow-node flow-node-high"><span class="flow-id">Tx #298894</span><span class="flow-meta">14.10 BTC · Risk 98/100</span></div>'
+            '<span class="flow-arrow">→</span>'
+            '<div class="flow-node flow-node-high"><span class="flow-id">Tx #299102</span><span class="flow-meta">13.45 BTC · Risk 99/100</span></div>'
+            '</div>'
+            '<div class="flow-row" style="margin-bottom:0;">'
+            '<div class="flow-node flow-node-low"><span class="flow-id">Peel Output #1</span><span class="flow-meta">0.72 BTC · Normal Change</span></div>'
+            '<span class="flow-arrow" style="color:#64748B;">⇢</span>'
+            '<div class="flow-node flow-node-med"><span class="flow-id">Burst Fan-Out</span><span class="flow-meta">0.65 BTC · Twin Burst Watch</span></div>'
+            '</div>'
+            '</div>'
+            '<div class="sec-grid">'
+            '<div class="sec-tile"><h5>Salted PBKDF2 Auth</h5><p>Per-user 16-byte salt, 120k SHA-256 rounds, and brute-force lockout protection.</p></div>'
+            '<div class="sec-tile"><h5>182-Feature Hybrid ML</h5><p>Combines structural outlier detection, look-alike burst scoring, and graph chains.</p></div>'
+            '<div class="sec-tile"><h5>Zero-Retention Scan</h5><p>Uploaded CSV datasets are scored in-memory and never persisted to disk.</p></div>'
+            '</div>'
+            '</div>',
+            unsafe_allow_html=True,
+        )
 
     with right_col:
         with st.container(border=True):
-            st.markdown("""
-            <div class="auth-hdr">
-                <p class="auth-title">Analyst Authentication Portal</p>
-                <span class="auth-badge">PROTECTED SESSION</span>
-            </div>
-            """, unsafe_allow_html=True)
+            st.markdown(
+                '<div class="auth-hdr">'
+                '<p class="auth-title">Analyst Authentication Portal</p>'
+                '<span class="auth-badge">PROTECTED SESSION</span>'
+                '</div>',
+                unsafe_allow_html=True,
+            )
 
             tab_create, tab_signin = st.tabs(["Create Profile", "Sign In"])
 
