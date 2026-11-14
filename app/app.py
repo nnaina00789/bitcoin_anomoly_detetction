@@ -96,11 +96,20 @@ html, body, [class*="css"] {
     font-weight: 700 !important;
     font-family: 'JetBrains Mono', monospace !important;
 }
-[data-testid="stForm"], [data-testid="stVerticalBlockBorderWrapper"] {
-    background: linear-gradient(165deg, rgba(15, 23, 42, 0.82) 0%, rgba(9, 14, 27, 0.92) 100%) !important;
-    border: 1px solid rgba(56, 189, 248, 0.18) !important;
-    border-radius: 14px !important;
-    box-shadow: 0 12px 32px rgba(0, 0, 0, 0.35);
+[data-testid="stVerticalBlockBorderWrapper"] {
+    background: linear-gradient(165deg, rgba(15, 23, 42, 0.78) 0%, rgba(9, 14, 27, 0.88) 100%) !important;
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border: 1px solid rgba(148, 163, 184, 0.16) !important;
+    border-radius: 16px !important;
+    padding: 22px 24px !important;
+    box-shadow: 0 24px 48px -12px rgba(0, 0, 0, 0.55);
+}
+[data-testid="stForm"] {
+    background: transparent !important;
+    border: none !important;
+    padding: 4px 0 0 0 !important;
+    box-shadow: none !important;
 }
 [data-testid="stFileUploaderDropzone"] {
     background: rgba(15, 23, 42, 0.65) !important;
@@ -194,121 +203,19 @@ html, body, [class*="css"] {
     border-right: 1px solid #1E293B;
 }
 [data-testid="stHeaderActionElements"] { display: none; }
-.hero-left {
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    padding: 28px 16px 20px 8px;
+.login-header {
+    text-align: center;
+    margin: 12px 0 24px 0;
 }
-.radar-stage {
-    position: relative;
-    width: 190px;
-    height: 190px;
-    margin-bottom: 28px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-}
-.radar-glow {
-    position: absolute;
-    width: 190px;
-    height: 190px;
-    border-radius: 50%;
-    background: radial-gradient(circle, rgba(56, 189, 248, 0.28) 0%, rgba(99, 102, 241, 0.16) 50%, transparent 72%);
-    filter: blur(16px);
-}
-.radar-ring-outer {
-    position: absolute;
-    width: 176px;
-    height: 176px;
-    border-radius: 50%;
-    border: 1px solid rgba(56, 189, 248, 0.28);
-    box-shadow: inset 0 0 24px rgba(56, 189, 248, 0.08);
-    animation: spinSlow 22s linear infinite;
-}
-.radar-ring-outer::after {
-    content: "";
-    position: absolute;
-    top: -4px;
-    left: 50%;
-    width: 8px;
-    height: 8px;
-    border-radius: 50%;
-    background: #38BDF8;
-    box-shadow: 0 0 12px #38BDF8;
-}
-.radar-ring-mid {
-    position: absolute;
-    width: 128px;
-    height: 128px;
-    border-radius: 50%;
-    border: 1px dashed rgba(129, 140, 248, 0.42);
-    animation: spinReverse 16s linear infinite;
-}
-.radar-core {
-    position: relative;
-    width: 78px;
-    height: 78px;
-    border-radius: 22px;
-    background: linear-gradient(145deg, rgba(15, 23, 42, 0.92), rgba(30, 41, 59, 0.78));
-    border: 1.5px solid rgba(56, 189, 248, 0.55);
-    box-shadow: 0 12px 30px rgba(0, 0, 0, 0.5), 0 0 24px rgba(56, 189, 248, 0.22);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 2.2rem;
-    font-weight: 800;
-    color: #F8FAFC;
-    text-shadow: 0 0 16px rgba(56, 189, 248, 0.65);
-}
-@keyframes spinSlow {
-    0% { transform: rotate(0deg); }
-    100% { transform: rotate(360deg); }
-}
-@keyframes spinReverse {
-    0% { transform: rotate(360deg); }
-    100% { transform: rotate(0deg); }
-}
-.sec-title {
-    font-size: 2.45rem;
+.login-heading {
+    font-size: 1.95rem;
     font-weight: 700;
-    line-height: 1.15;
+    line-height: 1.25;
     letter-spacing: -0.025em;
     background: linear-gradient(95deg, #FFFFFF 0%, #BAE6FD 55%, #A5B4FC 100%);
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
-    margin: 0 0 22px 0;
-}
-.hero-tags {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 10px;
-}
-.hero-tag {
-    padding: 6px 14px;
-    border-radius: 999px;
-    background: rgba(15, 23, 42, 0.60);
-    border: 1px solid rgba(56, 189, 248, 0.25);
-    color: #CBD5E1;
-    font-size: 0.78rem;
-    font-weight: 500;
-    letter-spacing: 0.02em;
-}
-.auth-hdr {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    margin-bottom: 6px;
-}
-.auth-title { color: #F8FAFC; font-size: 1.18rem; font-weight: 700; margin: 0; }
-.auth-badge {
-    font-family: 'JetBrains Mono', monospace;
-    font-size: 0.70rem;
-    padding: 3px 9px;
-    border-radius: 6px;
-    background: rgba(56, 189, 248, 0.12);
-    border: 1px solid rgba(56, 189, 248, 0.32);
-    color: #38BDF8;
+    margin: 0;
 }
 </style>
 """, unsafe_allow_html=True)
@@ -1182,39 +1089,16 @@ def _save_profiles(profiles: dict) -> None:
 
 
 def page_login():
-    st.write("")
-    st.write("")
-    left_col, right_col = st.columns([1.05, 1.0], gap="large")
+    st.markdown(
+        '<div class="login-header">'
+        '<h1 class="login-heading">Bitcoin Transaction Anomaly &amp; Security Scanner</h1>'
+        '</div>',
+        unsafe_allow_html=True,
+    )
+    _, center_col, _ = st.columns([1.0, 1.15, 1.0])
 
-    with left_col:
-        st.markdown(
-            '<div class="hero-left">'
-            '<div class="radar-stage">'
-            '<div class="radar-glow"></div>'
-            '<div class="radar-ring-outer"></div>'
-            '<div class="radar-ring-mid"></div>'
-            '<div class="radar-core">&#8383;</div>'
-            '</div>'
-            '<h1 class="sec-title">Bitcoin Transaction Anomaly &amp; Security Scanner</h1>'
-            '<div class="hero-tags">'
-            '<span class="hero-tag">Live CSV Screening</span>'
-            '<span class="hero-tag">Flow Graph Intelligence</span>'
-            '<span class="hero-tag">Protected Session</span>'
-            '</div>'
-            '</div>',
-            unsafe_allow_html=True,
-        )
-
-    with right_col:
+    with center_col:
         with st.container(border=True):
-            st.markdown(
-                '<div class="auth-hdr">'
-                '<p class="auth-title">User Authentication Portal</p>'
-                '<span class="auth-badge">PROTECTED SESSION</span>'
-                '</div>',
-                unsafe_allow_html=True,
-            )
-
             tab_create, tab_signin = st.tabs(["Create Profile", "Sign In"])
 
             with tab_create:
