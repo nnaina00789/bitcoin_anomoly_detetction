@@ -745,9 +745,10 @@ def page_proof():
     with d2:
         st.caption(f"**Label Efficiency** — Gains plateau at ~{SUM['labels_used']} labels (1.7% of data)")
         b = D["budget"].copy()
-        b_area = alt.Chart(b).mark_area(opacity=0.16, color="#38BDF8").encode(
+        b_area = alt.Chart(b).mark_area(opacity=0.18, color="#38BDF8", clip=True).encode(
             x=alt.X("total_labels:Q", title="Verified Past Labels"),
             y=alt.Y("PR-AUC mean:Q", title="PR-AUC", scale=alt.Scale(domain=[0.32, 0.45])),
+            y2=alt.datum(0.32),
         )
         b_line = alt.Chart(b).mark_line(point=alt.OverlayMarkDef(size=70), strokeWidth=2.5, color="#38BDF8").encode(
             x=alt.X("total_labels:Q", title="Verified Past Labels"),
