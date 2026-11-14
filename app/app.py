@@ -49,18 +49,17 @@ st.set_page_config(
 
 st.markdown("""
 <style>
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500;600&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500;600;700&family=Playfair+Display:wght@600;700&display=swap');
 
 html, body, [class*="css"] {
     font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
 }
 .stApp {
     background:
-        radial-gradient(circle at 14% 18%, rgba(14, 165, 233, 0.34) 0%, transparent 45%),
-        radial-gradient(circle at 86% 22%, rgba(245, 158, 11, 0.22) 0%, transparent 42%),
-        radial-gradient(circle at 78% 84%, rgba(99, 102, 241, 0.32) 0%, transparent 48%),
-        radial-gradient(circle at 22% 82%, rgba(16, 185, 129, 0.16) 0%, transparent 45%),
-        linear-gradient(135deg, #070D1F 0%, #0F1E3D 48%, #15193B 100%) !important;
+        radial-gradient(circle at 12% 16%, rgba(212, 175, 55, 0.15) 0%, transparent 42%),
+        radial-gradient(circle at 86% 20%, rgba(14, 165, 233, 0.22) 0%, transparent 46%),
+        radial-gradient(circle at 75% 85%, rgba(59, 130, 246, 0.18) 0%, transparent 48%),
+        linear-gradient(135deg, #060A12 0%, #0B1324 50%, #090E1C 100%) !important;
     background-attachment: fixed !important;
 }
 [data-testid="stAppViewContainer"], [data-testid="stMain"], [data-testid="stHeader"] {
@@ -215,78 +214,102 @@ html, body, [class*="css"] {
     border-right: 1px solid #1E293B;
 }
 [data-testid="stHeaderActionElements"] { display: none; }
-.vault-wrap {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    padding: 24px 0 16px 0;
-    perspective: 1000px;
-    position: relative;
-}
-.vault-aura {
-    position: absolute;
-    width: 220px;
-    height: 220px;
-    border-radius: 50%;
-    background: radial-gradient(circle, rgba(56, 189, 248, 0.25), rgba(99, 102, 241, 0.14), transparent 70%);
-    filter: blur(22px);
-}
-.vault-orbit-outer {
-    position: relative;
-    width: 164px;
-    height: 164px;
-    border-radius: 50%;
-    border: 1px solid rgba(56, 189, 248, 0.35);
-    box-shadow: 0 0 30px rgba(56, 189, 248, 0.16), inset 0 0 24px rgba(56, 189, 248, 0.08);
+.ws-ticker {
     display: flex;
     align-items: center;
-    justify-content: center;
-    transform-style: preserve-3d;
-    animation: vaultFloat 6s cubic-bezier(0.45, 0, 0.55, 1) infinite;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 14px;
+    padding: 10px 18px;
+    margin-bottom: 26px;
+    background: rgba(8, 13, 24, 0.92);
+    border-top: 2px solid #D4AF37;
+    border-bottom: 1px solid rgba(148, 163, 184, 0.18);
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.73rem;
+    color: #CBD5E1;
 }
-.vault-orbit-inner {
-    width: 128px;
-    height: 128px;
-    border-radius: 50%;
-    border: 1px dashed rgba(245, 158, 11, 0.45);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    transform: translateZ(18px);
+.ws-ticker-item { display: inline-flex; align-items: center; gap: 6px; }
+.ws-ticker-label { color: #94A3B8; font-weight: 500; }
+.ws-ticker-val { color: #F8FAFC; font-weight: 700; }
+.ws-ticker-up { color: #34D399; font-weight: 600; }
+.ws-ticker-gold { color: #FBBF24; font-weight: 600; }
+.ws-kicker {
+    color: #D4AF37;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.74rem;
+    font-weight: 600;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    margin-bottom: 10px;
 }
-.vault-coin {
-    width: 90px;
-    height: 90px;
-    border-radius: 50%;
-    background: linear-gradient(145deg, rgba(245, 158, 11, 0.25), rgba(15, 23, 42, 0.92));
-    border: 1.5px solid rgba(245, 158, 11, 0.65);
-    box-shadow:
-        0 16px 35px rgba(0, 0, 0, 0.6),
-        0 0 28px rgba(245, 158, 11, 0.28),
-        inset 0 2px 6px rgba(255, 255, 255, 0.22);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 2.55rem;
-    font-weight: 800;
-    color: #FBBF24;
-    text-shadow: 0 2px 18px rgba(251, 191, 36, 0.55);
-    transform: translateZ(34px);
-}
-.vault-title {
-    text-align: center;
-    font-size: 2.05rem;
+.ws-headline {
+    font-family: 'Playfair Display', Georgia, serif;
+    font-size: 2.45rem;
     font-weight: 700;
-    letter-spacing: -0.02em;
-    background: linear-gradient(90deg, #F8FAFC 0%, #BAE6FD 55%, #818CF8 100%);
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    margin: 18px 0 8px 0;
+    line-height: 1.16;
+    letter-spacing: -0.015em;
+    color: #F8FAFC;
+    margin: 0 0 12px 0;
 }
-@keyframes vaultFloat {
-    0%, 100% { transform: translateY(0px) scale(1); }
-    50%      { transform: translateY(-7px) scale(1.02); }
+.ws-subhead {
+    color: #94A3B8;
+    font-size: 0.95rem;
+    line-height: 1.6;
+    margin: 0 0 20px 0;
+}
+.ws-stat-strip {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    border-top: 1px solid rgba(212, 175, 55, 0.35);
+    border-bottom: 1px solid rgba(148, 163, 184, 0.18);
+    padding: 14px 0;
+    margin-bottom: 18px;
+}
+.ws-stat-cell {
+    padding-right: 14px;
+    border-right: 1px solid rgba(148, 163, 184, 0.14);
+}
+.ws-stat-cell:last-child { border-right: none; padding-left: 14px; padding-right: 0; }
+.ws-stat-cell:nth-child(2) { padding-left: 14px; }
+.ws-stat-num {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 1.45rem;
+    font-weight: 700;
+    color: #F8FAFC;
+    display: block;
+}
+.ws-stat-lbl {
+    font-size: 0.70rem;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: #94A3B8;
+    margin-top: 2px;
+    display: block;
+}
+.ws-portal-hdr {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding-bottom: 10px;
+    margin-bottom: 8px;
+    border-bottom: 1px solid rgba(148, 163, 184, 0.16);
+}
+.ws-portal-title {
+    font-family: 'Playfair Display', Georgia, serif;
+    font-size: 1.28rem;
+    font-weight: 700;
+    color: #F8FAFC;
+    margin: 0;
+}
+.ws-portal-tag {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.68rem;
+    padding: 3px 8px;
+    border-radius: 4px;
+    background: rgba(212, 175, 55, 0.12);
+    border: 1px solid rgba(212, 175, 55, 0.40);
+    color: #FBBF24;
 }
 </style>
 """, unsafe_allow_html=True)
@@ -1160,22 +1183,71 @@ def _save_profiles(profiles: dict) -> None:
 
 
 def page_login():
-    _, center_col, _ = st.columns([0.9, 1.35, 0.9])
+    lift_x = SUM["PR-AUC_final"] / SUM["PR-AUC_random"]
+    st.markdown(
+        '<div class="ws-ticker">'
+        '<span class="ws-ticker-item"><span class="ws-ticker-gold">&#8383; BITCOIN SURVEILLANCE DESK</span></span>'
+        f'<span class="ws-ticker-item"><span class="ws-ticker-label">BENCHMARKED FLOWS</span><span class="ws-ticker-val">{SUM["test_transactions"]:,} TXS</span></span>'
+        f'<span class="ws-ticker-item"><span class="ws-ticker-label">HIGH-RISK RATE</span><span class="ws-ticker-val">{SUM["flag_rate_%"]:.2f}%</span></span>'
+        f'<span class="ws-ticker-item"><span class="ws-ticker-label">VERIFIED HIT RATE</span><span class="ws-ticker-up">{SUM["verified_precision_final"][0]:.0%}</span></span>'
+        f'<span class="ws-ticker-item"><span class="ws-ticker-label">LIFT VS RANDOM</span><span class="ws-ticker-up">{lift_x:.1f}×</span></span>'
+        '<span class="ws-ticker-item"><span class="ws-ticker-label">ENGINE</span><span class="ws-ticker-val">182-FEATURE HYBRID</span></span>'
+        '</div>',
+        unsafe_allow_html=True,
+    )
 
-    with center_col:
+    left_col, right_col = st.columns([1.18, 1.0], gap="large")
+
+    with left_col:
         st.markdown(
-            '<div class="vault-wrap">'
-            '<div class="vault-aura"></div>'
-            '<div class="vault-orbit-outer">'
-            '<div class="vault-orbit-inner">'
-            '<div class="vault-coin">&#8383;</div>'
+            '<div>'
+            '<div class="ws-kicker">Institutional Digital Asset Surveillance</div>'
+            '<h1 class="ws-headline">Bitcoin Transaction Anomaly &amp; Security Scanner</h1>'
+            '<p class="ws-subhead">'
+            'Quantitative transaction screening, multi-hop chain contagion analysis, and real-time anomaly '
+            'scoring across Bitcoin network flows.'
+            '</p>'
+            '<div class="ws-stat-strip">'
+            f'<div class="ws-stat-cell"><span class="ws-stat-num">{SUM["test_transactions"]:,}</span><span class="ws-stat-lbl">Transactions Analyzed</span></div>'
+            f'<div class="ws-stat-cell"><span class="ws-stat-num">{lift_x:.1f}×</span><span class="ws-stat-lbl">Precision Lift</span></div>'
+            '<div class="ws-stat-cell"><span class="ws-stat-num">182</span><span class="ws-stat-lbl">On-Chain Signals</span></div>'
             '</div>'
-            '</div>'
-            '<div class="vault-title">Bitcoin Transaction Anomaly &amp; Security Scanner</div>'
             '</div>',
             unsafe_allow_html=True,
         )
+        step_vol = S.groupby(TIME).agg(Alerts=("flagged", "sum"), Total=("txId", "size")).reset_index()
+        st.caption("ON-CHAIN HIGH-RISK ALERT INDEX · WINDOWS 35–49")
+        mkt_chart = alt.Chart(step_vol).mark_area(
+            line={"color": "#D4AF37", "strokeWidth": 2.2},
+            point={"color": "#FBBF24", "size": 45},
+            color=alt.Gradient(
+                gradient="linear",
+                stops=[
+                    alt.GradientStop(color="rgba(212, 175, 55, 0.32)", offset=0),
+                    alt.GradientStop(color="rgba(212, 175, 55, 0.02)", offset=1),
+                ],
+                x1=1, x2=1, y1=1, y2=0,
+            ),
+        ).encode(
+            x=alt.X(f"{TIME}:O", title="Time Window", axis=alt.Axis(labelAngle=0)),
+            y=alt.Y("Alerts:Q", title="Flagged Flows"),
+            tooltip=[
+                alt.Tooltip(f"{TIME}:O", title="Window"),
+                alt.Tooltip("Alerts:Q", title="High-Risk Alerts", format=","),
+                alt.Tooltip("Total:Q", title="Total Volume", format=","),
+            ],
+        ).properties(height=195)
+        st.altair_chart(mkt_chart, use_container_width=True)
+
+    with right_col:
         with st.container(border=True):
+            st.markdown(
+                '<div class="ws-portal-hdr">'
+                '<p class="ws-portal-title">Client &amp; Investigator Access</p>'
+                '<span class="ws-portal-tag">PBKDF2-SHA256</span>'
+                '</div>',
+                unsafe_allow_html=True,
+            )
             tab_create, tab_signin = st.tabs(["Create Profile", "Sign In"])
 
             with tab_create:
