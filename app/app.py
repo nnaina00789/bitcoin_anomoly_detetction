@@ -74,15 +74,6 @@ st.markdown("""
 }
 .card h4 { margin: 0 0 8px 0; color: #38BDF8; font-size: 1rem; }
 .card p { margin: 0; color: #CBD5E1; font-size: 0.9rem; line-height: 1.5; }
-.brand-box {
-    padding: 10px 12px;
-    border-radius: 10px;
-    background: linear-gradient(135deg, rgba(56, 189, 248, 0.12), rgba(99, 102, 241, 0.08));
-    border: 1px solid rgba(56, 189, 248, 0.25);
-    margin-bottom: 12px;
-}
-.brand-title { font-weight: 700; font-size: 0.98rem; color: #F8FAFC; margin: 0; }
-.brand-sub { font-size: 0.78rem; color: #94A3B8; margin: 2px 0 0 0; }
 [data-testid="stHeaderActionElements"] { display: none; }
 </style>
 """, unsafe_allow_html=True)
@@ -811,13 +802,5 @@ PAGES = {
     "proof": st.Page(page_proof, title="Model & Drift Lab", icon=":material/monitoring:", url_path="lab"),
     "scan": st.Page(page_scan, title="Scan Your CSV", icon=":material/upload_file:", url_path="scan"),
 }
-with st.sidebar:
-    st.markdown(
-        '<div class="brand-box">'
-        '<p class="brand-title">Bitcoin Flow Intelligence</p>'
-        '<p class="brand-sub">AML & Anomaly Detection</p>'
-        '</div>',
-        unsafe_allow_html=True,
-    )
 nav = st.navigation(list(PAGES.values()))
 nav.run()
