@@ -1,80 +1,703 @@
-import streamlit as st
-import pandas as pd
+"""Bitcoin Suspicious Activity Finder — AML & Flow Intelligence Dashboard.
+
+Run with:  streamlit run app/app.py
+"""
+import html
+import json
+from datetime import datetime
 from pathlib import Path
 
-ROOT = Path(__file__).resolve().parent.parent
-TIME, AMOUNT = "Time step", "total_BTC"
-st.set_page_config(page_title="Bitcoin Flow Investigator", page_icon="🔎", layout="wide")
+import altair as alt
+import numpy as np
+import pandas as pd
+import streamlit as st
+import streamlit.components.v1 as components
 
-@st.cache_data
+ROOT = Path(__file__).resolve().parent.parent
+RES = ROOT / "results"
+TIME, AMOUNT = "Time step", "total_BTC"
+
+LEVEL_ICON = {"High": "🔴 High", "Medium": "🟠 Medium", "Low": "🟢 Low"}
+STATUS_ICON = {
+    "Confirmed illicit": "⛔ Illicit",
+    "Confirmed legitimate": "✅ Legit",
+    "Not yet investigated": "Unlabelled",
+}
+LEVEL_STYLE = {
+    "High": ("#450A0A", "#FCA5A5", "#EF4444"),
+    "Medium": ("#451A03", "#FCD34D", "#F59E0B"),
+    "Low": ("#052E16", "#86EFAC", "#22C55E"),
+    "Outside": ("#1E293B", "#94A3B8", "#475569"),
+}
+
+st.set_page_config(
+    page_title="Bitcoin Flow Intelligence · SIH26146",
+    page_icon="🛡️",
+    layout="wide",
+    initial_sidebar_state="expanded",
+)
+
+st.markdown("""
+<style>
+[data-testid="stMetric"] {
+    background: linear-gradient(180deg, #111827 0%, #0F172A 100%);
+    border: 1px solid #1E293B;
+    border-top: 3px solid #38BDF8;
+    border-radius: 12px;
+    padding: 14px 18px;
+    box-shadow: 0 4px 14px rgba(0, 0, 0, 0.25);
+}
+[data-testid="stMetricLabel"] { color: #94A3B8 !important; font-size: 0.85rem !important; }
+[data-testid="stMetricValue"] { color: #F8FAFC !important; font-weight: 700 !important; }
+.card {
+    background: #111827;
+    border: 1px solid #1E293B;
+    border-top: 2px solid #38BDF8;
+    border-radius: 12px;
+    padding: 18px 20px;
+    min-height: 155px;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-start;
+}
+.card h4 { margin: 0 0 8px 0; color: #38BDF8; font-size: 1rem; }
+.card p { margin: 0; color: #CBD5E1; font-size: 0.9rem; line-height: 1.5; }
+</style>
+""", unsafe_allow_html=True)
+
+
+# --------------------------------------------------------------------------- #
+# Data
+# --------------------------------------------------------------------------- #
 @st.cache_data
 def load():
-    s = pd.read_csv(ROOT / "results" / "scores.csv")
-    m = pd.read_csv(ROOT / "results" / "metrics.csv")
-    c = pd.read_csv(ROOT / "results" / "cluster_info.csv")[["cluster", "n_verified"]]
-    b = pd.read_csv(ROOT / "results" / "label_budget.csv")
-    s["status"] = s["y"].map({1: "Illicit (verified)", 0: "Licit (verified)"}).fillna("Unverified")
-    return s[s[TIME] >= 35], m, c, b
+    need = ["scores.csv", "metrics.csv", "summary.json"]
+    if not all((RES / f).exists() for f in need):
+        return None
+    d = {
+        "scores": pd.read_csv(RES / "scores.csv"),
+        "metrics": pd.read_csv(RES / "metrics.csv"),
+        "summary": json.loads((RES / "summary.json").read_text()),
+        "edges": pd.read_csv(RES / "flow_edges.csv"),
+        "chains": pd.read_csv(RES / "chains.csv"),
+        "vsum": pd.read_csv(RES / "verification_summary.csv"),
+        "vsample": pd.read_csv(RES / "verification_sample.csv"),
+        "per_step": pd.read_csv(RES / "per_step.csv"),
+        "budget": pd.read_csv(RES / "label_budget.csv"),
+        "validation": pd.read_csv(RES / "validation.csv"),
+    }
+    s = d["scores"]
+    s["Level"] = s["risk_level"].map(LEVEL_ICON)
+    s["Status"] = s["status"].map(STATUS_ICON)
+    s["Pattern"] = np.select(
+        [
+            s["chain_size"] > 1,
+            s["lookalike_pct_step"] >= 0.90,
+            (s["family_checked"] > 0) & (s["family_illicit"] > 0),
+            s["point_pct"] >= 0.97,
+        ],
+        ["🕸️ Linked Chain", "🔁 Twin Burst", "👥 Risky Group", "⚡ Rare Shape"],
+        default="📊 Normal",
+    )
+    s["Flow"] = s["n_senders"].astype(str) + " in → " + s["n_receivers"].astype(str) + " out"
+    s["Main reason"] = s["why_flagged"].str.split(" | ").str[0]
+    return d
 
-scores, metrics, cinfo, budget = load()
 
-st.title("🔎 Bitcoin Unusual Flow Investigator")
-st.caption("Cluster-then-verify risk scoring · Elliptic++ dataset · test period: time steps 35–49")
+def build_sar_text(r):
+    action = {"High": "Escalate & Freeze Pending Review", "Medium": "Enhanced Due Diligence (EDD)",
+              "Low": "Routine Monitoring"}[r["risk_level"]]
+    chain_line = f"Connected to Suspicious Chain #{int(r['chain_id'])} ({int(r['chain_size'])} linked nodes)" \
+        if r["chain_size"] > 1 else "Standalone flow (not part of a multi-node flagged chain)"
+    reasons = "\n".join(f"- {x}" for x in r["why_flagged"].split(" | "))
+    return (
+        f"# Case Brief — Tx {int(r['txId'])}\n"
+        f"- **Generated:** {datetime.now().strftime('%Y-%m-%d %H:%M')}\n"
+        f"- **Risk Tier:** {LEVEL_ICON[r['risk_level']]} (Anomaly Score: {r['risk_score']:.1f}/100)\n"
+        f"- **Detected Pattern:** {r['Pattern']}\n"
+        f"- **Recommended Action:** {action}\n"
+        f"- **Time Window:** {int(r[TIME])} | **Amount:** {r[AMOUNT]:,.4f} BTC | **Fee:** {r['fees']:.6f} BTC\n"
+        f"- **Graph Context:** {r['Flow']} | {chain_line}\n\n"
+        f"## Triggered Detection Signals\n{reasons}\n"
+    )
 
-# ---- Sidebar filters ----
-st.sidebar.header("Filters")
-t0, t1 = st.sidebar.slider("Time steps", 35, 49, (35, 49))
-top_n = st.sidebar.slider("Top N flows to review", 10, 500, 100, step=10)
-all_status = ["Illicit (verified)", "Licit (verified)", "Unverified"]
-statuses = st.sidebar.multiselect("Label status", all_status, default=all_status)
 
-view = scores[scores[TIME].between(t0, t1) & scores["status"].isin(statuses)]
-ranked = view.sort_values(["score", TIME], ascending=False).head(top_n)
-lab = ranked[ranked["y"].notna()]
+D = load()
+if D is None:
+    st.error("Results not found. Run `python src/pipeline.py` first.")
+    st.stop()
+S, SUM = D["scores"], D["summary"]
+BY_ID = S.set_index("txId")
 
-# ---- KPI cards ----
-c1, c2, c3, c4 = st.columns(4)
-c1.metric("Transactions in view", f"{len(view):,}")
-c2.metric("Flows in review queue", f"{len(ranked):,}")
-c3.metric("Verified illicit in queue", int(lab["y"].sum()))
-c4.metric("Precision (verified only)", f"{lab['y'].mean():.1%}" if len(lab) else "–")
 
-tab1, tab2, tab3 = st.tabs(["📋 Ranked flows", "🧩 Clusters", "📊 Model comparison"])
+# --------------------------------------------------------------------------- #
+# Dark-mode SVG flow & chain graphs
+# --------------------------------------------------------------------------- #
+def _node_meta(tx_id):
+    if tx_id in BY_ID.index:
+        r = BY_ID.loc[tx_id]
+        bg, fg, border = LEVEL_STYLE[r["risk_level"]]
+        tag = "⛔ Criminal" if r["status"] == "Confirmed illicit" else f"Risk {r['risk_score']:.0f}/100"
+        sub = f"{r[AMOUNT]:,.3f} BTC · {tag}"
+        tip = f"Tx {tx_id} | Window {int(r[TIME])} | Risk {r['risk_score']:.0f}/100 | {r[AMOUNT]:,.4f} BTC"
+        return bg, fg, border, sub, tip
+    bg, fg, border = LEVEL_STYLE["Outside"]
+    return bg, fg, border, "Earlier window", f"Tx {tx_id} (before window 35)"
 
-with tab1:
+
+def _svg_node(x, y, w, h, tx_id, centre=False):
+    bg, fg, border, sub, tip = _node_meta(tx_id)
+    sw = "3" if centre else "1.5"
+    return (
+        f'<g><title>{html.escape(tip)}</title>'
+        f'<rect x="{x}" y="{y}" width="{w}" height="{h}" rx="10" '
+        f'fill="{bg}" stroke="{border}" stroke-width="{sw}"/>'
+        f'<text x="{x + 12}" y="{y + 20}" font-family="system-ui,sans-serif" '
+        f'font-size="12" font-weight="700" fill="{fg}">Tx {tx_id}</text>'
+        f'<text x="{x + 12}" y="{y + 37}" font-family="system-ui,sans-serif" '
+        f'font-size="11" fill="{fg}" opacity="0.9">{html.escape(sub)}</text></g>'
+    )
+
+
+def _curve(x1, y1, x2, y2):
+    mx = (x1 + x2) / 2
+    return (f'<path d="M {x1} {y1} C {mx} {y1}, {mx} {y2}, {x2} {y2}" '
+            f'fill="none" stroke="#38BDF8" stroke-opacity="0.55" stroke-width="1.8" '
+            f'marker-end="url(#arr)"/>')
+
+
+def _svg_wrap(width, height, body):
+    return (
+        f'<svg viewBox="0 0 {width} {height}" width="100%" height="{height}" '
+        f'style="background:#0F172A;border:1px solid #1E293B;border-radius:12px;">'
+        '<defs><marker id="arr" viewBox="0 0 10 10" refX="8" refY="5" '
+        'markerWidth="6" markerHeight="6" orient="auto-start-reverse">'
+        '<path d="M 0 1 L 10 5 L 0 9 z" fill="#38BDF8"/></marker></defs>'
+        f'{body}</svg>'
+    )
+
+
+def render_tx_flow(tx_id, max_side=6):
+    e = D["edges"]
+    senders = e.loc[e["txId2"] == tx_id, "txId1"].tolist()
+    receivers = e.loc[e["txId1"] == tx_id, "txId2"].tolist()
+    s_show, r_show = senders[:max_side], receivers[:max_side]
+    n_rows = max(len(s_show), len(r_show), 1)
+    nw, nh, gap = 180, 48, 14
+    height = max(145, n_rows * (nh + gap) + 24)
+    width = 680
+    cx, cy = (width - nw) / 2, (height - nh) / 2
+
+    parts = []
+    s_top = (height - (len(s_show) * (nh + gap) - gap)) / 2 if s_show else 0
+    for i, sid in enumerate(s_show):
+        sy = s_top + i * (nh + gap)
+        parts.append(_curve(20 + nw, sy + nh / 2, cx, cy + nh / 2))
+        parts.append(_svg_node(20, sy, nw, nh, sid))
+
+    r_top = (height - (len(r_show) * (nh + gap) - gap)) / 2 if r_show else 0
+    rx = width - nw - 20
+    for i, rid in enumerate(r_show):
+        ry = r_top + i * (nh + gap)
+        parts.append(_curve(cx + nw, cy + nh / 2, rx, ry + nh / 2))
+        parts.append(_svg_node(rx, ry, nw, nh, rid))
+
+    parts.append(_svg_node(cx, cy, nw, nh, tx_id, centre=True))
+    components.html(_svg_wrap(width, height, "".join(parts)), height=height + 8)
+    if len(senders) > max_side or len(receivers) > max_side:
+        st.caption(f"Showing up to {max_side} senders/receivers (total: {len(senders)} in, {len(receivers)} out).")
+
+
+def render_chain_flow(members_df, max_nodes=24):
+    sub = members_df.sort_values([TIME, "risk_score"], ascending=[True, False]).head(max_nodes)
+    id_set = set(sub["txId"].tolist())
+    e = D["edges"]
+    e = e[e["txId1"].isin(id_set) & e["txId2"].isin(id_set)]
+
+    steps = sorted(sub[TIME].unique())
+    nw, nh, col_gap, row_gap = 170, 48, 55, 14
+    by_step = {s: sub.loc[sub[TIME] == s, "txId"].tolist() for s in steps}
+    max_rows = max(len(v) for v in by_step.values())
+    width = max(680, len(steps) * (nw + col_gap) + 40)
+    height = max(170, max_rows * (nh + row_gap) + 30)
+
+    pos = {}
+    for ci, s in enumerate(steps):
+        col_ids = by_step[s]
+        x = 20 + ci * (nw + col_gap)
+        top = (height - (len(col_ids) * (nh + row_gap) - row_gap)) / 2
+        for ri, tid in enumerate(col_ids):
+            pos[tid] = (x, top + ri * (nh + row_gap))
+
+    parts = []
+    for a, b in e.itertuples(index=False):
+        if a in pos and b in pos:
+            x1, y1 = pos[a]
+            x2, y2 = pos[b]
+            parts.append(_curve(x1 + nw, y1 + nh / 2, x2, y2 + nh / 2))
+    for tid, (x, y) in pos.items():
+        parts.append(_svg_node(x, y, nw, nh, tid))
+    disp_h = min(height, 430)
+    components.html(_svg_wrap(width, height, "".join(parts)), height=disp_h + 8)
+
+
+def legend():
+    st.caption("🔴 High risk  ·  🟠 Medium risk  ·  🟢 Low risk  ·  ⚪ Earlier window  ·  Hover any node for details.")
+
+
+# --------------------------------------------------------------------------- #
+# Page 1: Command Center
+# --------------------------------------------------------------------------- #
+def page_home():
+    st.title("🛡️ Command Center")
+    st.caption("Overview of scanned Bitcoin traffic, high-risk alert patterns, and detection architecture (test windows 35–49).")
+
+    vp, vb = SUM["verified_precision_final"], SUM["verified_precision_baseline"]
+    c1, c2, c3, c4 = st.columns(4)
+    c1.metric("Transactions Scanned", f"{SUM['test_transactions']:,}", "Time windows 35–49", delta_color="off")
+    c2.metric("High-Risk Alerts", f"{SUM['flagged']:,}", f"{SUM['flag_rate_%']:.2f}% flag rate", delta_color="off")
+    c3.metric("Verified Hit Rate", f"{vp[0]:.0%}", f"vs {vb[0]:.0%} amount baseline")
+    c4.metric("Lift Over Random", f"{SUM['PR-AUC_final'] / SUM['PR-AUC_random']:.1f}×",
+              f"PR-AUC {SUM['PR-AUC_final']:.3f} vs {SUM['PR-AUC_random']:.3f}")
+
+    st.write("")
+    left, right = st.columns([1, 1], gap="large")
+
+    with left:
+        with st.container(border=True):
+            st.subheader("Traffic & Alert Volume by Window")
+            view_mode = st.segmented_control(
+                "View", ["Alerts Only", "Alert Rate (%)", "Total Traffic"],
+                default="Alerts Only", label_visibility="collapsed",
+            )
+            step_vol = S.groupby(TIME).agg(Total=("txId", "size"), Flagged=("flagged", "sum")).reset_index()
+            step_vol["Rate_%"] = (step_vol["Flagged"] / step_vol["Total"] * 100).round(2)
+            tips = [
+                alt.Tooltip(f"{TIME}:O", title="Window"),
+                alt.Tooltip("Total:Q", title="Total Txs", format=","),
+                alt.Tooltip("Flagged:Q", title="High-Risk Alerts", format=","),
+                alt.Tooltip("Rate_%:Q", title="Alert Rate (%)", format=".2f"),
+            ]
+            x_enc = alt.X(f"{TIME}:O", title="Time Window (~2 weeks each)", axis=alt.Axis(labelAngle=0))
+
+            if view_mode == "Alert Rate (%)":
+                ch = alt.Chart(step_vol).mark_area(
+                    line={"color": "#38BDF8", "strokeWidth": 2.5},
+                    point={"color": "#38BDF8", "size": 55},
+                    color=alt.Gradient(
+                        gradient="linear",
+                        stops=[alt.GradientStop(color="rgba(56,189,248,0.35)", offset=0),
+                               alt.GradientStop(color="rgba(56,189,248,0.02)", offset=1)],
+                        x1=1, x2=1, y1=1, y2=0,
+                    ),
+                ).encode(x=x_enc, y=alt.Y("Rate_%:Q", title="Alert Rate (%)"), tooltip=tips)
+            else:
+                y_col = "Flagged" if view_mode != "Total Traffic" else "Total"
+                y_title = "High-Risk Alerts" if y_col == "Flagged" else "Total Transactions"
+                bar_color = "#EF4444" if y_col == "Flagged" else "#38BDF8"
+                bars = alt.Chart(step_vol).mark_bar(
+                    color=bar_color, cornerRadiusTopLeft=5, cornerRadiusTopRight=5,
+                ).encode(x=x_enc, y=alt.Y(f"{y_col}:Q", title=y_title), tooltip=tips)
+                labels = bars.mark_text(dy=-8, fontSize=11, color="#E2E8F0").encode(
+                    text=alt.Text(f"{y_col}:Q", format=","),
+                )
+                ch = bars + labels
+            st.altair_chart(ch.properties(height=300), use_container_width=True)
+
+    with right:
+        with st.container(border=True):
+            st.subheader("Amount (BTC) vs. Model Risk")
+            lvl_pick = st.segmented_control(
+                "Risk filter", ["All", "🔴 High", "🟠 Medium", "🟢 Low"],
+                default="All", label_visibility="collapsed",
+            )
+            lvl_map = {"🔴 High": "High", "🟠 Medium": "Medium", "🟢 Low": "Low"}
+            if lvl_pick in lvl_map:
+                sub = S[S["risk_level"] == lvl_map[lvl_pick]]
+                samp = sub.sample(n=min(800, len(sub)), random_state=42).copy()
+            else:
+                # Balanced sample so High-risk flows are never buried under Low-risk bulk
+                parts = [
+                    S[S["risk_level"] == lv].sample(
+                        n=min(400, int((S["risk_level"] == lv).sum())), random_state=42
+                    )
+                    for lv in ["Low", "Medium", "High"]
+                ]
+                samp = pd.concat(parts)
+
+            samp["BTC_clip"] = samp[AMOUNT].clip(lower=1e-4)
+            amt_99 = float(S[AMOUNT].quantile(0.99))
+            pts = alt.Chart(samp).mark_circle(size=42, opacity=0.75).encode(
+                x=alt.X("BTC_clip:Q", scale=alt.Scale(type="log"), title="Transaction Amount (BTC, log scale)"),
+                y=alt.Y("risk_score:Q", scale=alt.Scale(domain=[0, 102]), title="Risk Score (0–100)"),
+                color=alt.Color(
+                    "risk_level:N", legend=None,
+                    scale=alt.Scale(domain=["High", "Medium", "Low"], range=["#EF4444", "#F59E0B", "#22C55E"]),
+                ),
+                tooltip=[
+                    alt.Tooltip("txId:Q", title="TxID"),
+                    alt.Tooltip(f"{TIME}:Q", title="Window"),
+                    alt.Tooltip(f"{AMOUNT}:Q", title="Amount (BTC)", format=",.4f"),
+                    alt.Tooltip("risk_score:Q", title="Risk Score", format=".1f"),
+                    alt.Tooltip("Level:N", title="Tier"),
+                    alt.Tooltip("Pattern:N", title="Pattern"),
+                ],
+            )
+            rule = alt.Chart(pd.DataFrame({"x": [amt_99]})).mark_rule(
+                strokeDash=[5, 4], color="#94A3B8", strokeWidth=1.5,
+            ).encode(x="x:Q")
+            st.altair_chart((pts + rule).properties(height=300), use_container_width=True)
+            st.caption("Dashed line = 99th-percentile BTC amount cutoff. High-risk flows cluster at ordinary BTC sizes.")
+
+    st.divider()
+    b_left, b_right = st.columns([2, 1.5], vertical_alignment="center")
+    section = b_left.segmented_control(
+        "Bottom section", ["🚨 Top 5 Urgent Alerts", "🧠 How It Works"],
+        default="🚨 Top 5 Urgent Alerts", label_visibility="collapsed",
+    )
+    with b_right:
+        q1, q2 = st.columns(2)
+        q1.page_link(PAGES["queue"], label="Full Queue", icon="🚨", use_container_width=True)
+        q2.page_link(PAGES["chains"], label=f"Chains ({SUM['chains']})", icon="🔗", use_container_width=True)
+
+    if section == "🧠 How It Works":
+        a, b, c = st.columns(3, gap="medium")
+        with a:
+            st.markdown('<div class="card"><h4>1. Normal Behaviour Model</h4>'
+                        '<p>Legitimate users send varied amounts with diverse input/output shapes. '
+                        'We learn this baseline diversity from past traffic (windows 1–34).</p></div>', unsafe_allow_html=True)
+        with b:
+            st.markdown('<div class="card"><h4>2. Look-Alike Burst Detection</h4>'
+                        '<p>Automated criminal tools create dense bursts of twin transactions in the same window. '
+                        'Per-window crowding surfaces them without labels.</p></div>', unsafe_allow_html=True)
+        with c:
+            st.markdown(f'<div class="card"><h4>3. Graph & Feedback ({SUM["labels_used"]} labels)</h4>'
+                        f'<p>50 behaviour families calibrated with ~10 past checks each, combined with '
+                        f'money-flow graph links ({SUM["chains"]} connected chains).</p></div>', unsafe_allow_html=True)
+    else:
+        top5 = S.head(5)[["rank", "Level", "txId", TIME, AMOUNT, "risk_score", "Pattern", "Flow", "Main reason"]]
+        st.dataframe(
+            top5, hide_index=True, use_container_width=True,
+            column_config={
+                "rank": st.column_config.NumberColumn("Rank"),
+                "Level": st.column_config.TextColumn("Tier"),
+                "txId": st.column_config.TextColumn("Transaction ID"),
+                TIME: st.column_config.NumberColumn("Window"),
+                AMOUNT: st.column_config.NumberColumn("Amount (BTC)", format="%.4f"),
+                "risk_score": st.column_config.ProgressColumn("Anomaly Score", min_value=0, max_value=100, format="%.1f"),
+                "Main reason": st.column_config.TextColumn("Why Flagged", width="large"),
+            },
+        )
+
+
+# --------------------------------------------------------------------------- #
+# Page 2: Ranked Flows (Investigator Workbench)
+# --------------------------------------------------------------------------- #
+def page_queue():
+    st.title("🚨 Ranked Flows")
+    st.caption("Statistically unusual Bitcoin flows ranked from #1 downward, plus the stratified Top-500 verification audit.")
+
+    tab_rank, tab_audit = st.tabs(["📋 Ranked Anomaly List", "🎯 Verified Sample Audit (Top 500)"])
+
+    with tab_rank:
+        with st.container(border=True):
+            f1, f2, f3, f4 = st.columns([2, 2, 2, 2.4])
+            top_k = f1.selectbox("Scope", ["Top 50", "Top 100", "Top 500", "All", "🔴 High Only", "🟠 Medium Only", "🟢 Low Only"])
+            t0, t1 = f2.slider("Time windows", 35, 49, (35, 49))
+            sort_by = f3.selectbox("Sort by", ["Anomaly score", "Look-alike burst", "Amount (BTC)", "Chain size"])
+
+        v = S[S[TIME].between(t0, t1)]
+        tier_map = {"🔴 High Only": "High", "🟠 Medium Only": "Medium", "🟢 Low Only": "Low"}
+        if top_k in tier_map:
+            v = v[v["risk_level"] == tier_map[top_k]]
+
+        sort_col = {"Anomaly score": "risk_score", "Look-alike burst": "lookalike_pct_step",
+                    "Amount (BTC)": AMOUNT, "Chain size": "chain_size"}[sort_by]
+        v = v.sort_values([sort_col, "risk_score"], ascending=False)
+        if top_k.startswith("Top "):
+            v = v.head(int(top_k.split()[1]))
+
+        pick_map = {
+            int(r["txId"]): f"#{int(r['rank'])} · {int(r['txId'])} ({r['risk_score']:.0f}/100 · {r[AMOUNT]:.2f} BTC)"
+            for _, r in v.head(500).iterrows()
+        }
+        picked_tx = f4.selectbox(
+            "Jump to Transaction", [None] + list(pick_map.keys()),
+            format_func=lambda x: "All in scope (type or pick)..." if x is None else pick_map[x],
+        )
+        if picked_tx is not None:
+            v = v[v["txId"] == picked_tx]
+
+        m1, m2, m3, m4 = st.columns(4)
+        m1.metric("Flows Shown", f"{len(v):,}")
+        m2.metric("Mean Anomaly Score", f"{v['risk_score'].mean():.1f} / 100" if len(v) else "–")
+        m3.metric("In Connected Chains", f"{int((v['chain_size'] > 1).sum()):,}")
+        m4.metric("Median BTC", f"{v[AMOUNT].median():.4f}" if len(v) else "–")
+
+        if v.empty:
+            st.info("No flows match these filters.")
+            return
+
+        cols = ["rank", "Level", "txId", TIME, AMOUNT, "risk_score", "Pattern", "Flow", "Main reason"]
+        event = st.dataframe(
+            v[cols].head(1000), hide_index=True, use_container_width=True, height=350,
+            on_select="rerun", selection_mode="single-row",
+            column_config={
+                "rank": st.column_config.NumberColumn("Rank"),
+                "Level": st.column_config.TextColumn("Tier"),
+                "txId": st.column_config.TextColumn("Transaction ID"),
+                TIME: st.column_config.NumberColumn("Window"),
+                AMOUNT: st.column_config.NumberColumn("Amount (BTC)", format="%.4f"),
+                "risk_score": st.column_config.ProgressColumn("Anomaly Score", min_value=0, max_value=100, format="%.1f"),
+                "Main reason": st.column_config.TextColumn("Why Flagged", width="large"),
+            },
+        )
+
+        e1, e2 = st.columns(2)
+        sar_bundle = "\n---\n\n".join(build_sar_text(row) for _, row in v.head(25).iterrows())
+        e1.download_button("📥 Export Top 25 Case Briefs (.md)", sar_bundle, "top25_case_briefs.md",
+                           "text/markdown", use_container_width=True)
+        e2.download_button("⬇️ Export Ranked Flows (.csv)", v[cols].to_csv(index=False),
+                           "ranked_flows.csv", "text/csv", use_container_width=True)
+
+        rows = event.selection.rows
+        if not rows:
+            st.info("👆 Click any row above to inspect its signal breakdown and money-flow graph.")
+        else:
+            detail(v.iloc[rows[0]])
+
+    with tab_audit:
+        st.subheader("Stratified Verification Sample (100 Flows from Top 500)")
+        st.write("Stratified 100-flow audit sampled across rank bands (`1–50`, `51–200`, `201–500`) of the "
+                 "labelled Top-500 ranked list for both our detector and the mandatory **Amount Threshold** baseline.")
+        vs = D["vsum"].rename(columns={
+            "method": "Method", "band": "Rank Band", "sampled": "Sampled",
+            "confirmable": "Confirmable", "confirmed_illicit": "Confirmed Illicit",
+            "precision": "Precision", "ci_low": "95% CI Low", "ci_high": "95% CI High",
+        })
+        st.dataframe(
+            vs, hide_index=True, use_container_width=True,
+            column_config={c: st.column_config.NumberColumn(format="percent")
+                           for c in ["Precision", "95% CI Low", "95% CI High"]},
+        )
+        st.subheader("Sampled Transactions")
+        vpick = st.segmented_control("Filter sample", ["Our model", "Amount threshold (baseline)"],
+                                     default="Our model", label_visibility="collapsed")
+        vsub = D["vsample"][D["vsample"]["method"] == vpick]
+        st.dataframe(vsub.drop(columns=["method"]), hide_index=True, use_container_width=True, height=340)
+
+
+def detail(r):
+    tx_id = int(r["txId"])
+    st.divider()
+    st.subheader(f"🔍 Flow Inspector · Tx {tx_id}")
+
+    a, b, c, d = st.columns(4)
+    a.metric("Anomaly Score", f"{r['risk_score']:.1f} / 100")
+    b.metric("Risk Tier", LEVEL_ICON[r["risk_level"]])
+    c.metric("Amount Moved", f"{r[AMOUNT]:,.4f} BTC")
+    d.metric("Global Rank", f"#{int(r['rank']):,}")
+
+    left, right = st.columns([1, 1])
+    with left:
+        st.markdown("##### Why It Was Surfaced")
+        for reason in r["why_flagged"].split(" | "):
+            st.markdown(f"- {reason}")
+
+        sig_df = pd.DataFrame({
+            "Signal": ["Look-alike burst", "Behaviour group", "Shape rarity", "BTC amount"],
+            "Score": [round(r["lookalike_pct_step"] * 100, 1), round(r["family_risk"] * 100, 1),
+                      round(r["point_pct"] * 100, 1), round(r["amount_pct"] * 100, 1)],
+        })
+        bar = alt.Chart(sig_df).mark_bar(cornerRadiusEnd=5, color="#38BDF8").encode(
+            x=alt.X("Score:Q", scale=alt.Scale(domain=[0, 100]), title="Signal Percentile (0–100)"),
+            y=alt.Y("Signal:N", sort="-x", title=None),
+            tooltip=["Signal", "Score"],
+        ).properties(height=155)
+        st.altair_chart(bar, use_container_width=True)
+
+        st.markdown(
+            f"**Metadata:** Window **{int(r[TIME])}** · Inputs **{int(r['num_input_addresses'])}** · "
+            f"Outputs **{int(r['num_output_addresses'])}** · Fee **{r['fees']:.6f} BTC**"
+        )
+        if r["chain_size"] > 1:
+            st.warning(f"Linked to **Suspicious Chain #{int(r['chain_id'])}** ({int(r['chain_size'])} flagged nodes).")
+
+        e1, e2 = st.columns(2)
+        case_json = json.dumps({
+            "txId": tx_id, "time_window": int(r[TIME]), "anomaly_score": float(r["risk_score"]),
+            "risk_tier": r["risk_level"], "pattern": r["Pattern"],
+            "total_BTC": float(r[AMOUNT]), "reasons": r["why_flagged"].split(" | "),
+            "chain_id": None if pd.isna(r["chain_id"]) else int(r["chain_id"]),
+        }, indent=2)
+        e1.download_button("📄 Case JSON", case_json, f"case_{tx_id}.json", "application/json", use_container_width=True)
+        e2.download_button("📝 SAR Brief (.md)", build_sar_text(r), f"SAR_{tx_id}.md", "text/markdown",
+                           use_container_width=True)
+
+    with right:
+        st.markdown("##### Money-Flow Neighbourhood")
+        e = D["edges"]
+        if not ((e["txId2"] == tx_id).any() or (e["txId1"] == tx_id).any()):
+            st.info("No direct transaction links in the dataset graph.")
+        else:
+            render_tx_flow(tx_id)
+            legend()
+
+
+# --------------------------------------------------------------------------- #
+# Page 3: Suspicious Chains
+# --------------------------------------------------------------------------- #
+def page_chains():
+    st.title("🔗 Suspicious Chains")
+    st.write("Connected clusters of high-risk transactions passing funds directly to each other.")
+    ch = D["chains"].copy()
+    if ch.empty:
+        st.info("No multi-transaction chains found.")
+        return
+    ch["duration"] = (ch["last_step"] - ch["first_step"] + 1).clip(lower=1)
+    ch["velocity_btc"] = (ch["total_BTC"] / ch["duration"]).round(3)
+
+    a, b, c = st.columns(3)
+    a.metric("Chains Detected", f"{len(ch):,}")
+    b.metric("Largest Chain", f"{int(ch['transactions'].max())} nodes")
+    c.metric("Chains With Confirmed Illicit", f"{int((ch['confirmed_illicit'] > 0).sum())}")
+
+    show = ch.rename(columns={
+        "chain_id": "Chain", "transactions": "Nodes", "first_step": "Start", "last_step": "End",
+        "duration": "Windows", "velocity_btc": "BTC / Window",
+        "total_BTC": "Total BTC", "top_risk": "Max Risk", "avg_risk": "Avg Risk",
+        "confirmed_illicit": "Criminal", "confirmed_legit": "Legitimate",
+    })
+    event = st.dataframe(
+        show, hide_index=True, use_container_width=True, height=290,
+        on_select="rerun", selection_mode="single-row",
+        column_config={
+            "Avg Risk": st.column_config.ProgressColumn(min_value=0, max_value=100, format="%.0f"),
+            "Total BTC": st.column_config.NumberColumn(format="%.3f"),
+            "Max Risk": st.column_config.NumberColumn(format="%.0f"),
+        },
+    )
+    if not event.selection.rows:
+        st.info("👆 Click any chain above to inspect its flow graph.")
+        return
+
+    cid = ch.iloc[event.selection.rows[0]]["chain_id"]
+    members = S[S["chain_id"] == cid].sort_values([TIME, "risk_score"], ascending=[True, False])
+    st.subheader(f"Chain #{int(cid)} · {len(members)} connected transactions")
+    render_chain_flow(members)
+    legend()
+    st.download_button(f"⬇️ Export Chain #{int(cid)} CSV", members.to_csv(index=False),
+                       f"chain_{int(cid)}.csv", "text/csv")
     st.dataframe(
-        ranked[["txId", TIME, AMOUNT, "cluster", "score", "status"]],
-        hide_index=True,
-        column_config={"score": st.column_config.ProgressColumn("Risk score", min_value=0, max_value=1, format="%.3f")},
+        members[["rank", "Level", "txId", TIME, AMOUNT, "risk_score", "Pattern", "Main reason"]],
+        hide_index=True, use_container_width=True,
+        column_config={
+            "rank": st.column_config.NumberColumn("Rank"),
+            "Level": st.column_config.TextColumn("Tier"),
+            "txId": st.column_config.TextColumn("Transaction ID"),
+            TIME: st.column_config.NumberColumn("Window"),
+            AMOUNT: st.column_config.NumberColumn("Amount (BTC)", format="%.4f"),
+            "risk_score": st.column_config.ProgressColumn("Anomaly Score", min_value=0, max_value=100, format="%.1f"),
+            "Main reason": st.column_config.TextColumn("Why Flagged", width="large"),
+        },
     )
-    st.download_button("⬇️ Download queue as CSV", ranked.to_csv(index=False), "review_queue.csv")
 
-with tab2:
-    cl = (view.groupby("cluster")
-              .agg(transactions=("txId", "size"), risk=("score", "first"))
-              .sort_values("risk", ascending=False).reset_index())
-    cl = cl.merge(cinfo, on="cluster", how="left")
-    st.caption("Risk = smoothed illicit rate among n_verified training-period transactions. "
-               "Fewer verified labels means a less reliable estimate.")
+
+# --------------------------------------------------------------------------- #
+# Page 4: Model & Drift Lab
+# --------------------------------------------------------------------------- #
+def page_proof():
+    st.title("📊 Model & Drift Lab")
+    st.write("Evaluation on **untouched test windows 35–49**, plus an interactive alert-threshold simulator.")
+
+    st.header("1. Interactive Alert Budget Simulator")
+    pct_cut = st.slider("Alert threshold (flag top % of traffic)", 0.2, 10.0, 1.0, step=0.2,
+                        help="Slide to see the trade-off between investigator workload and criminals caught.")
+    cut_score = float(np.quantile(S["risk_score"], 1 - pct_cut / 100))
+    sim_flag = S["risk_score"] >= cut_score
+    sim_lab = S[sim_flag & S["y"].notna()]
+    tot_illicit = int((S["y"] == 1).sum())
+    caught = int((sim_lab["y"] == 1).sum())
+    s1, s2, s3, s4 = st.columns(4)
+    s1.metric("Risk Cutoff", f"{cut_score:.1f} / 100")
+    s2.metric("Alerts Generated", f"{int(sim_flag.sum()):,}", f"{sim_flag.mean():.2%} of traffic", delta_color="off")
+    s3.metric("Known Precision", f"{sim_lab['y'].mean():.1%}" if len(sim_lab) else "–")
+    s4.metric("Known Criminals Caught", f"{caught} / {tot_illicit}", f"{caught / max(tot_illicit, 1):.1%} recall")
+
+    st.divider()
+    st.header("2. Stratified Verification & Top-K Lift")
+    vs = D["vsum"]
+    c_left, c_right = st.columns(2)
+    with c_left:
+        allrows = vs[vs["band"] == "All sampled"].copy()
+        allrows["Method"] = allrows["method"]
+        chart = alt.Chart(allrows).mark_bar(size=65, cornerRadiusTopLeft=6, cornerRadiusTopRight=6).encode(
+            x=alt.X("Method:N", title=None, axis=alt.Axis(labelAngle=0)),
+            y=alt.Y("precision:Q", title="Verified Precision (95% Wilson CI)", axis=alt.Axis(format="%"),
+                    scale=alt.Scale(domain=[0, 1])),
+            color=alt.Color("Method:N", legend=None, scale=alt.Scale(range=["#64748B", "#38BDF8"])),
+        )
+        err = alt.Chart(allrows).mark_errorbar(thickness=2, color="#F8FAFC").encode(
+            x="Method:N", y=alt.Y("ci_low:Q", title=""), y2="ci_high:Q",
+        )
+        st.altair_chart((chart + err).properties(height=290), use_container_width=True)
+
+    with c_right:
+        m = D["metrics"].copy()
+        pick = m[m["model"].str.contains("FINAL|Amount|Random")].copy()
+        pick["short"] = np.where(
+            pick["model"].str.contains("FINAL"), "Our Model (Hybrid)",
+            np.where(pick["model"].str.contains("Amount"), "Amount Baseline", "Random Guessing"),
+        )
+        topk = pick.melt("short", ["P@50", "P@100", "P@500"], var_name="Cutoff", value_name="Precision")
+        lift = alt.Chart(topk).mark_bar(cornerRadiusTopLeft=4, cornerRadiusTopRight=4).encode(
+            x=alt.X("Cutoff:N", sort=["P@50", "P@100", "P@500"], title=None, axis=alt.Axis(labelAngle=0)),
+            y=alt.Y("Precision:Q", axis=alt.Axis(format="%"), scale=alt.Scale(domain=[0, 1])),
+            xOffset="short:N",
+            color=alt.Color("short:N", title="Model",
+                            scale=alt.Scale(domain=["Our Model (Hybrid)", "Amount Baseline", "Random Guessing"],
+                                            range=["#38BDF8", "#64748B", "#334155"])),
+            tooltip=[alt.Tooltip("short:N", title="Model"), "Cutoff", alt.Tooltip("Precision:Q", format=".1%")],
+        ).properties(height=290)
+        st.altair_chart(lift, use_container_width=True)
+
+    nice_m = m.rename(columns={
+        "model": "Model", "flag_rate_%": "Flag Rate %", "recall_at_flag_%": "Recall @ Flag %",
+        "labels_used": "Labels Used", "PR-AUC_5seed_mean": "5-Seed PR-AUC",
+        "PR-AUC_5seed_std": "5-Seed Std", "distinct_scores": "Distinct Scores",
+    })
     st.dataframe(
-        cl, hide_index=True,
-        column_config={"risk": st.column_config.ProgressColumn("Risk", min_value=0, max_value=1, format="%.3f")},
+        nice_m, hide_index=True, use_container_width=True,
+        column_config={c: st.column_config.NumberColumn(format="percent") for c in ["P@50", "P@100", "P@500"]},
     )
-    st.caption("Flows in the same cluster share a risk score; within a cluster, the most recent appear first.")
-    pick = st.selectbox("Inspect a cluster", cl["cluster"])
-    sub = view[view["cluster"] == pick]
-    st.write(f"**Cluster {pick}:** {len(sub):,} transactions in view")
-    st.bar_chart(sub.groupby(TIME).size(), x_label="Time step", y_label="Transactions")
-    st.dataframe(sub[["txId", TIME, AMOUNT, "status"]].head(200), hide_index=True)
 
-with tab3:
-    st.dataframe(metrics, hide_index=True)
-    st.subheader("How much verification is needed?")
-    st.line_chart(budget, x="total_labels", y="PR-AUC mean",
-                  x_label="Verified labels", y_label="PR-AUC")
-    st.markdown(
-        "- **Random reference** is the floor. Anything below it is worse than guessing.\n"
-        "- **Amount rule and Isolation Forest** fall below random: illicit flows are not extreme outliers.\n"
-        "- **Cluster-then-verify** reaches about 3× random PR-AUC (0.197 ± 0.012 over 5 seeds) "
-        "with 500 verified training labels (1.7%). Gains flatten beyond that."
-    )
+    st.header("3. Concept Drift & Label Efficiency")
+    d1, d2 = st.columns([3, 2])
+    with d1:
+        ps = D["per_step"].rename(columns={"time_step": "Window", "PR-AUC final": "Our model",
+                                           "PR-AUC amount": "Amount baseline"})
+        long = ps.melt("Window", ["Our model", "Amount baseline"], var_name="Approach", value_name="PR-AUC")
+        line = alt.Chart(long).mark_line(point=True).encode(
+            x=alt.X("Window:O"), y=alt.Y("PR-AUC:Q"),
+            color=alt.Color("Approach:N", scale=alt.Scale(range=["#64748B", "#38BDF8"])),
+        )
+        rule = alt.Chart(pd.DataFrame({"x": [43]})).mark_rule(strokeDash=[6, 4], color="#EF4444").encode(x="x:O")
+        st.altair_chart((line + rule).properties(height=260), use_container_width=True)
+        st.caption("Red dashed line (window 43): dark-market shutdown causes severe concept drift until window 48.")
+    with d2:
+        b = D["budget"]
+        st.altair_chart(alt.Chart(b).mark_line(point=True, color="#38BDF8").encode(
+            x=alt.X("total_labels:Q", title="Verified past labels"),
+            y=alt.Y("PR-AUC mean:Q", title="PR-AUC"),
+        ).properties(height=260), use_container_width=True)
+        st.caption(f"Gains plateau around {SUM['labels_used']} labels (1.7% of training labels).")
+
+
+PAGES = {
+    "home": st.Page(page_home, title="Command Center", icon="🛡️", default=True),
+    "queue": st.Page(page_queue, title="Ranked Flows", icon="🚨", url_path="queue"),
+    "chains": st.Page(page_chains, title="Suspicious Chains", icon="🔗", url_path="chains"),
+    "proof": st.Page(page_proof, title="Model & Drift Lab", icon="📊", url_path="lab"),
+}
+nav = st.navigation(list(PAGES.values()))
+nav.run()
