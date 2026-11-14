@@ -901,139 +901,130 @@ def _save_profiles(profiles: dict) -> None:
 def page_login():
     st.markdown("""
     <style>
-    [data-testid="stAppViewContainer"] {
+    .stApp {
         background:
-            radial-gradient(circle at 18% 22%, rgba(56, 189, 248, 0.20) 0%, transparent 42%),
-            radial-gradient(circle at 82% 78%, rgba(99, 102, 241, 0.22) 0%, transparent 45%),
-            radial-gradient(circle at 50% 50%, rgba(245, 158, 11, 0.07) 0%, transparent 55%),
-            linear-gradient(135deg, #040711 0%, #0B1328 50%, #070B18 100%) !important;
+            radial-gradient(ellipse 75% 55% at 15% 15%, rgba(56, 189, 248, 0.24), transparent 60%),
+            radial-gradient(ellipse 70% 55% at 85% 85%, rgba(99, 102, 241, 0.26), transparent 60%),
+            radial-gradient(ellipse 45% 40% at 50% 45%, rgba(245, 158, 11, 0.09), transparent 65%),
+            repeating-linear-gradient(90deg, rgba(148, 163, 184, 0.03) 0 1px, transparent 1px 64px),
+            repeating-linear-gradient(0deg, rgba(148, 163, 184, 0.03) 0 1px, transparent 1px 64px),
+            linear-gradient(145deg, #050914 0%, #0D1730 48%, #090E20 100%) !important;
+        background-attachment: fixed !important;
     }
-    [data-testid="stHeader"] { background: transparent !important; }
+    [data-testid="stAppViewContainer"], [data-testid="stMain"], [data-testid="stHeader"] {
+        background: transparent !important;
+    }
     [data-testid="stForm"] {
-        background: linear-gradient(155deg, rgba(15, 23, 42, 0.86), rgba(8, 13, 27, 0.94));
-        backdrop-filter: blur(18px);
-        border: 1px solid rgba(56, 189, 248, 0.28);
-        border-radius: 18px;
-        padding: 24px 26px;
+        background: linear-gradient(160deg, rgba(17, 25, 46, 0.78), rgba(9, 14, 29, 0.88)) !important;
+        backdrop-filter: blur(22px);
+        -webkit-backdrop-filter: blur(22px);
+        border: 1px solid rgba(56, 189, 248, 0.26) !important;
+        border-radius: 20px !important;
+        padding: 26px 28px !important;
         box-shadow:
-            0 28px 60px rgba(0, 0, 0, 0.65),
-            0 0 38px rgba(56, 189, 248, 0.12),
-            inset 0 1px 0 rgba(255, 255, 255, 0.12);
-        transform: perspective(1000px) rotateX(1deg);
-        transition: transform 0.3s ease, box-shadow 0.3s ease;
+            0 30px 65px rgba(0, 0, 0, 0.65),
+            0 0 45px rgba(56, 189, 248, 0.10),
+            inset 0 1px 0 rgba(255, 255, 255, 0.14);
+        transform: perspective(1200px) rotateX(1.2deg);
+        transition: transform 0.35s ease, box-shadow 0.35s ease, border-color 0.35s ease;
     }
     [data-testid="stForm"]:hover {
-        transform: perspective(1000px) rotateX(0deg) translateY(-3px);
+        transform: perspective(1200px) rotateX(0deg) translateY(-3px);
+        border-color: rgba(56, 189, 248, 0.45) !important;
         box-shadow:
-            0 34px 70px rgba(0, 0, 0, 0.72),
-            0 0 46px rgba(56, 189, 248, 0.20),
-            inset 0 1px 0 rgba(255, 255, 255, 0.18);
+            0 36px 75px rgba(0, 0, 0, 0.75),
+            0 0 55px rgba(56, 189, 248, 0.18),
+            inset 0 1px 0 rgba(255, 255, 255, 0.20);
     }
-    .btc-stage {
-        height: 410px;
+    .vault-wrap {
         display: flex;
         flex-direction: column;
         align-items: center;
         justify-content: center;
-        perspective: 1100px;
+        padding: 36px 0 18px 0;
+        perspective: 1000px;
         position: relative;
     }
-    .btc-glow {
+    .vault-aura {
         position: absolute;
-        width: 240px;
-        height: 240px;
+        width: 220px;
+        height: 220px;
         border-radius: 50%;
-        background: radial-gradient(circle, rgba(56, 189, 248, 0.28), rgba(245, 158, 11, 0.10), transparent 70%);
-        filter: blur(18px);
-        animation: pulseGlow 4s ease-in-out infinite;
+        background: radial-gradient(circle, rgba(56, 189, 248, 0.25), rgba(99, 102, 241, 0.14), transparent 70%);
+        filter: blur(22px);
     }
-    .btc-ring {
-        position: absolute;
-        width: 270px;
-        height: 270px;
-        border-radius: 50%;
-        border: 1.5px dashed rgba(56, 189, 248, 0.45);
-        transform: rotateX(68deg) rotateY(-14deg);
-        animation: orbitSpin 14s linear infinite;
-    }
-    .btc-cube {
-        width: 148px;
-        height: 148px;
+    .vault-orbit-outer {
         position: relative;
-        transform-style: preserve-3d;
-        animation: cubeSpin 12s linear infinite;
-    }
-    .btc-face {
-        position: absolute;
-        width: 148px;
-        height: 148px;
-        border: 1.5px solid rgba(56, 189, 248, 0.55);
-        border-radius: 20px;
-        background: linear-gradient(135deg, rgba(56, 189, 248, 0.16), rgba(15, 23, 42, 0.72));
-        box-shadow: inset 0 0 24px rgba(56, 189, 248, 0.22);
+        width: 170px;
+        height: 170px;
+        border-radius: 50%;
+        border: 1px solid rgba(56, 189, 248, 0.35);
+        box-shadow: 0 0 30px rgba(56, 189, 248, 0.16), inset 0 0 24px rgba(56, 189, 248, 0.08);
         display: flex;
         align-items: center;
         justify-content: center;
-        font-size: 3.1rem;
+        transform-style: preserve-3d;
+        animation: vaultFloat 5.5s ease-in-out infinite;
+    }
+    .vault-orbit-inner {
+        width: 132px;
+        height: 132px;
+        border-radius: 50%;
+        border: 1px dashed rgba(245, 158, 11, 0.45);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transform: translateZ(18px);
+    }
+    .vault-coin {
+        width: 92px;
+        height: 92px;
+        border-radius: 50%;
+        background: linear-gradient(145deg, rgba(245, 158, 11, 0.25), rgba(15, 23, 42, 0.92));
+        border: 1.5px solid rgba(245, 158, 11, 0.65);
+        box-shadow:
+            0 16px 35px rgba(0, 0, 0, 0.6),
+            0 0 28px rgba(245, 158, 11, 0.28),
+            inset 0 2px 6px rgba(255, 255, 255, 0.22);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 2.6rem;
         font-weight: 800;
-        color: #F59E0B;
-        text-shadow: 0 0 22px rgba(245, 158, 11, 0.65);
-        backface-visibility: visible;
+        color: #FBBF24;
+        text-shadow: 0 2px 18px rgba(251, 191, 36, 0.55);
+        transform: translateZ(34px);
     }
-    .btc-front  { transform: translateZ(74px); }
-    .btc-back   { transform: rotateY(180deg) translateZ(74px); }
-    .btc-right  { transform: rotateY(90deg) translateZ(74px); }
-    .btc-left   { transform: rotateY(-90deg) translateZ(74px); }
-    .btc-top    { transform: rotateX(90deg) translateZ(74px); }
-    .btc-bottom { transform: rotateX(-90deg) translateZ(74px); }
-    .btc-badge {
-        margin-top: 58px;
-        padding: 7px 16px;
-        border-radius: 999px;
-        background: rgba(15, 23, 42, 0.75);
-        border: 1px solid rgba(56, 189, 248, 0.35);
-        color: #CBD5E1;
-        font-size: 0.82rem;
-        letter-spacing: 0.08em;
-        text-transform: uppercase;
-        box-shadow: 0 10px 24px rgba(0, 0, 0, 0.4);
+    .vault-title {
+        text-align: center;
+        font-size: 2.15rem;
+        font-weight: 700;
+        letter-spacing: -0.02em;
+        background: linear-gradient(90deg, #F8FAFC 0%, #BAE6FD 55%, #818CF8 100%);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        margin: 18px 0 10px 0;
     }
-    @keyframes cubeSpin {
-        0%   { transform: rotateX(-18deg) rotateY(0deg); }
-        100% { transform: rotateX(-18deg) rotateY(360deg); }
-    }
-    @keyframes orbitSpin {
-        0%   { transform: rotateX(68deg) rotateY(-14deg) rotateZ(0deg); }
-        100% { transform: rotateX(68deg) rotateY(-14deg) rotateZ(360deg); }
-    }
-    @keyframes pulseGlow {
-        0%, 100% { transform: scale(0.95); opacity: 0.75; }
-        50%      { transform: scale(1.1); opacity: 1; }
+    @keyframes vaultFloat {
+        0%, 100% { transform: rotateX(14deg) rotateY(-12deg) translateY(0px); }
+        50%      { transform: rotateX(8deg) rotateY(12deg) translateY(-8px); }
     }
     </style>
     """, unsafe_allow_html=True)
 
-    left_col, right_col = st.columns([1.0, 1.15], gap="large")
-    with left_col:
+    _, mid, _ = st.columns([0.9, 1.35, 0.9])
+    with mid:
         st.markdown("""
-        <div class="btc-stage">
-            <div class="btc-glow"></div>
-            <div class="btc-ring"></div>
-            <div class="btc-cube">
-                <div class="btc-face btc-front">&#8383;</div>
-                <div class="btc-face btc-back">&#8383;</div>
-                <div class="btc-face btc-right">&#8383;</div>
-                <div class="btc-face btc-left">&#8383;</div>
-                <div class="btc-face btc-top"></div>
-                <div class="btc-face btc-bottom"></div>
+        <div class="vault-wrap">
+            <div class="vault-aura"></div>
+            <div class="vault-orbit-outer">
+                <div class="vault-orbit-inner">
+                    <div class="vault-coin">&#8383;</div>
+                </div>
             </div>
-            <div class="btc-badge">AML &amp; Blockchain Security</div>
+            <div class="vault-title">Bitcoin Flow Intelligence</div>
         </div>
         """, unsafe_allow_html=True)
-
-    with right_col:
-        st.write("")
-        st.title("Bitcoin Flow Intelligence")
 
         tab_create, tab_signin = st.tabs(["Create Profile", "Sign In"])
 
