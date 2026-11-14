@@ -83,6 +83,7 @@ st.markdown("""
 }
 .brand-title { font-weight: 700; font-size: 0.98rem; color: #F8FAFC; margin: 0; }
 .brand-sub { font-size: 0.78rem; color: #94A3B8; margin: 2px 0 0 0; }
+[data-testid="stHeaderActionElements"] { display: none; }
 </style>
 """, unsafe_allow_html=True)
 
