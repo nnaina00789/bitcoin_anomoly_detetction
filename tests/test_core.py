@@ -13,8 +13,10 @@ import pandas as pd
 ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ROOT / "src"))
 
+import joblib
+
 from metrics import n_ties, precision_at_k, wilson_ci
-from models import blend, to_percentile
+from models import blend, score_dataframe, to_percentile
 
 
 class TestMetrics(unittest.TestCase):
@@ -64,6 +66,20 @@ class TestArtifacts(unittest.TestCase):
         metrics = pd.read_csv(res / "metrics.csv")
         self.assertAlmostEqual(summary["PR-AUC_final"], float(metrics.iloc[-1]["PR-AUC"]))
         self.assertGreater(int(metrics.iloc[-1]["distinct_scores"]), 1000)
+
+    def test_live_csv_scorer_full_and_minimal(self):
+        res = ROOT / "results"
+        bundle = joblib.load(res / "model_bundle.joblib")
+        sample = pd.read_csv(res / "sample_scan.csv")
+        out_full, n_full = score_dataframe(sample, bundle)
+        self.assertEqual(len(out_full), len(sample))
+        self.assertEqual(n_full, 182)
+        self.assertTrue((out_full["risk_score"].between(0, 100)).all())
+
+        minimal = pd.DataFrame({"txId": [1, 2], "Time step": [36, 36], "total_BTC": [0.5, 250.0]})
+        out_min, n_min = score_dataframe(minimal, bundle)
+        self.assertEqual(len(out_min), 2)
+        self.assertEqual(n_min, 1)
 
 
 if __name__ == "__main__":

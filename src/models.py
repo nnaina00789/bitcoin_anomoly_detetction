@@ -98,3 +98,85 @@ def to_percentile(values, reference):
 
 def blend(lookalike_pct, family_pct, w):
     return w * lookalike_pct + (1 - w) * family_pct
+
+
+def score_dataframe(df, bundle):
+    """Score an arbitrary uploaded DataFrame using the saved model bundle.
+
+    Works with full 182-feature Elliptic++ CSVs OR simplified CSVs (missing
+    features are imputed with training medians).
+    """
+    feats = bundle["feats"]
+    full_cols = sum(c in df.columns for c in feats)
+    med = bundle["train_medians"]
+    cols = {
+        c: (pd.to_numeric(df[c], errors="coerce").fillna(med[c]) if c in df.columns
+            else np.full(len(df), med[c], dtype="float32"))
+        for c in feats
+    }
+    X = pd.DataFrame(cols, index=df.index).to_numpy("float32")
+    Xl = signed_log(X)
+    Z = bundle["scaler"].transform(Xl)
+    Zp = bundle["pca"].transform(Z).astype("float32")
+
+    # Point unusualness + family risk
+    raw_point = -bundle["iso"].score_samples(Xl)
+    clusters = bundle["km"].predict(Zp)
+    risk = pd.Series(clusters).map(bundle["family_risk_map"]).fillna(bundle["prior"]).to_numpy()
+
+    # Look-alike burst within the uploaded batch (per window if >= 12 rows, else whole batch)
+    steps = pd.to_numeric(df.get("Time step", pd.Series(1, index=df.index)), errors="coerce").fillna(1).to_numpy()
+    k = min(10, max(1, len(df) - 1))
+    raw_look = np.zeros(len(df))
+    if len(df) > 1:
+        for s in np.unique(steps):
+            m = steps == s
+            if m.sum() >= 12:
+                d = NearestNeighbors(n_neighbors=11).fit(Zp[m]).kneighbors(Zp[m])[0][:, 1:]
+                raw_look[m] = rankdata(-d.mean(axis=1)) / m.sum()
+            else:
+                d = NearestNeighbors(n_neighbors=k + 1).fit(Zp).kneighbors(Zp[m])[0][:, 1:]
+                raw_look[m] = rankdata(-d.mean(axis=1)) / len(df)
+    else:
+        raw_look[:] = 0.5
+
+    pct_look = to_percentile(raw_look, bundle["ref_lookalike"])
+    pct_fam = to_percentile(risk, bundle["ref_family"])
+    pct_point = to_percentile(raw_point, bundle["ref_point"])
+    final = blend(pct_look, pct_fam, bundle["w"])
+
+    amt = pd.to_numeric(df.get("total_BTC", pd.Series(0.0, index=df.index)), errors="coerce").fillna(0).to_numpy()
+    pct_amt = to_percentile(amt, bundle["ref_amount"])
+
+    out = pd.DataFrame({
+        "txId": df["txId"].values if "txId" in df.columns else np.arange(1, len(df) + 1),
+        "Time step": steps.astype(int),
+        "total_BTC": amt,
+        "risk_score": np.round(final * 100, 1),
+        "risk_level": np.select([final >= bundle["thr"], final >= bundle["thr_med"]], ["High", "Medium"], "Low"),
+        "lookalike_pct": np.round(pct_look * 100, 1),
+        "family_risk_pct": np.round(risk * 100, 1),
+        "shape_rarity_pct": np.round(pct_point * 100, 1),
+        "amount_pct": np.round(pct_amt * 100, 1),
+        "cluster": clusters,
+    })
+    out["Pattern"] = np.select(
+        [pct_look >= 0.90, risk > bundle["prior"] * 1.5, pct_point >= 0.97],
+        ["🔁 Twin Burst", "👥 Risky Group", "⚡ Rare Shape"],
+        default="📊 Normal",
+    )
+    reasons = []
+    for i in range(len(out)):
+        r = []
+        if pct_look[i] >= 0.90:
+            r.append(f"Dense look-alike burst (top {100 - pct_look[i] * 100:.0f}%).")
+        if risk[i] > bundle["prior"] * 1.5:
+            r.append(f"Matches high-risk behaviour group #{clusters[i]}.")
+        if pct_point[i] >= 0.97:
+            r.append("Unusual transaction shape vs normal traffic.")
+        if pct_amt[i] >= 0.99:
+            r.append(f"Large BTC transfer ({amt[i]:,.2f} BTC).")
+        reasons.append(" | ".join(r) if r else "Looks like ordinary traffic.")
+    out["Why Flagged"] = reasons
+    return out.sort_values("risk_score", ascending=False).reset_index(drop=True), full_cols
+

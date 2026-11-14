@@ -14,15 +14,20 @@ Steps
 import json
 import time
 
+import joblib
 import numpy as np
 import pandas as pd
 from scipy.sparse.csgraph import connected_components
+from sklearn.cluster import KMeans
+from sklearn.decomposition import PCA
+from sklearn.ensemble import IsolationForest
 from sklearn.metrics import average_precision_score
+from sklearn.preprocessing import StandardScaler
 
-from config import (AMOUNT, FLAG_QUANTILE, LABELS_PER_CLUSTER, RESULTS_DIR, SEED,
-                    TEST_START, TIME, TRAIN_END, VAL_START)
+from config import (AMOUNT, FLAG_QUANTILE, LABELS_PER_CLUSTER, N_CLUSTERS,
+                    RESULTS_DIR, SEED, TEST_START, TIME, TRAIN_END, VAL_START)
 from data import load, load_edges
-from features import build_graph
+from features import build_graph, signed_log
 from metrics import evaluate, precision_at_k, wilson_ci, n_ties
 from models import (blend, families, family_risk, global_density, lookalike_burst,
                     point_unusualness, prepare, to_percentile)
@@ -320,6 +325,41 @@ def main():
         "chains": int(len(ch)), "threshold": float(thr),
     }
     (RESULTS_DIR / "summary.json").write_text(json.dumps(summary, indent=2))
+
+    # ---------------- 8. Save lightweight model bundle + sample CSV --------- #
+    med = tx.loc[fit, feats].median()
+    X_fit = tx[feats].fillna(med).to_numpy("float32")
+    Xl_fit = signed_log(X_fit)
+    sc_fit = StandardScaler().fit(Xl_fit[fit])
+    Z_fit = sc_fit.transform(Xl_fit)
+    pca_fit = PCA(n_components=20, random_state=SEED).fit(Z_fit[fit])
+    Zp_fit = pca_fit.transform(Z_fit).astype("float32")
+    iso_fit = IsolationForest(n_estimators=200, random_state=SEED, n_jobs=-1).fit(Xl_fit[fit])
+    km_fit = KMeans(n_clusters=N_CLUSTERS, n_init=10, random_state=SEED).fit(Zp_fit[fit])
+    risk_map = pd.Series(risk, index=P["cluster"]).groupby(level=0).first().to_dict()
+    rs = np.random.default_rng(SEED)
+    idx_fit = rs.choice(np.flatnonzero(fit), size=min(5000, int(fit.sum())), replace=False)
+    bundle = {
+        "feats": feats, "train_medians": med.to_dict(),
+        "scaler": sc_fit, "pca": pca_fit, "iso": iso_fit, "km": km_fit,
+        "family_risk_map": risk_map, "prior": float(verified["y"].mean()),
+        "ref_lookalike": np.sort(P["raw"]["lookalike"][idx_fit]),
+        "ref_point": np.sort(P["raw"]["point"][idx_fit]),
+        "ref_family": np.sort(risk[idx_fit]),
+        "ref_amount": np.sort(amount[idx_fit]),
+        "w": w, "thr": float(thr), "thr_med": float(thr_med),
+    }
+    joblib.dump(bundle, RESULTS_DIR / "model_bundle.joblib", compress=3)
+
+    # 60-row sample CSV from test period (mix of high/medium/low) for live scanner demo
+    sample_idx = np.concatenate([
+        test.head(20)["txId"].to_numpy(),
+        test[test["risk_level"] == "Medium"].sample(20, random_state=SEED)["txId"].to_numpy(),
+        test[test["risk_level"] == "Low"].sample(20, random_state=SEED)["txId"].to_numpy(),
+    ])
+    tx[tx["txId"].isin(sample_idx)][["txId", TIME] + feats].to_csv(
+        RESULTS_DIR / "sample_scan.csv", index=False
+    )
     log("Done. All files written to results/")
 
 

@@ -4,16 +4,22 @@ Run with:  streamlit run app/app.py
 """
 import html
 import json
+import sys
 from datetime import datetime
 from pathlib import Path
 
 import altair as alt
+import joblib
 import numpy as np
 import pandas as pd
 import streamlit as st
 import streamlit.components.v1 as components
 
 ROOT = Path(__file__).resolve().parent.parent
+if str(ROOT / "src") not in sys.path:
+    sys.path.insert(0, str(ROOT / "src"))
+from models import score_dataframe  # noqa: E402
+
 RES = ROOT / "results"
 TIME, AMOUNT = "Time step", "total_BTC"
 
@@ -120,6 +126,12 @@ def build_sar_text(r):
         f"- **Graph Context:** {r['Flow']} | {chain_line}\n\n"
         f"## Triggered Detection Signals\n{reasons}\n"
     )
+
+
+@st.cache_resource
+def load_bundle():
+    p = RES / "model_bundle.joblib"
+    return joblib.load(p) if p.exists() else None
 
 
 D = load()
@@ -693,11 +705,93 @@ def page_proof():
         st.caption(f"Gains plateau around {SUM['labels_used']} labels (1.7% of training labels).")
 
 
+# --------------------------------------------------------------------------- #
+# Page 5: Scan Your CSV (Live ML Inference)
+# --------------------------------------------------------------------------- #
+def page_scan():
+    st.title("⚡ Scan Your CSV")
+    st.caption("Upload any Bitcoin transaction CSV to run the trained anomaly-detection pipeline live.")
+
+    bundle = load_bundle()
+    if bundle is None:
+        st.error("Model bundle not found (`results/model_bundle.joblib`). Run `python src/pipeline.py` first.")
+        return
+
+    sample_path = RES / "sample_scan.csv"
+    with st.container(border=True):
+        c1, c2 = st.columns([2, 1])
+        up = c1.file_uploader(
+            "Upload transaction CSV (full 182-feature Elliptic++ format or simplified columns like `txId`, `Time step`, `total_BTC`, `fees`, `num_input_addresses`, `num_output_addresses`)",
+            type=["csv"],
+        )
+        c2.write("")
+        run_demo = c2.button("⚡ Run Demo on Sample (60 Txs)", use_container_width=True)
+        if sample_path.exists():
+            c2.download_button("⬇️ Download Sample CSV", sample_path.read_bytes(),
+                               "sample_bitcoin_txs.csv", "text/csv", use_container_width=True)
+
+    df_in = None
+    if up is not None:
+        df_in = pd.read_csv(up)
+    elif run_demo and sample_path.exists():
+        df_in = pd.read_csv(sample_path)
+
+    if df_in is None:
+        st.info("Upload a CSV above or click **⚡ Run Demo on Sample (60 Txs)** to test the live ML scanner.")
+        return
+
+    with st.spinner("Running trained scaler, PCA, Isolation Forest, K-Means & look-alike burst detector..."):
+        scored, n_feats = score_dataframe(df_in, bundle)
+
+    scored["Tier"] = scored["risk_level"].map(LEVEL_ICON)
+    scored.insert(0, "Rank", np.arange(1, len(scored) + 1))
+
+    if n_feats == len(bundle["feats"]):
+        st.success(f"Scanned **{len(scored):,}** transactions using all **{n_feats}** trained features.")
+    else:
+        st.info(f"Scanned **{len(scored):,}** transactions (**{n_feats}/{len(bundle['feats'])}** Elliptic++ features "
+                "matched; remaining features imputed with training medians).")
+
+    n_hi = int((scored["risk_level"] == "High").sum())
+    n_med = int((scored["risk_level"] == "Medium").sum())
+    n_lo = int((scored["risk_level"] == "Low").sum())
+    k1, k2, k3, k4 = st.columns(4)
+    k1.metric("Transactions Scanned", f"{len(scored):,}")
+    k2.metric("🔴 High Risk", f"{n_hi:,}", f"{n_hi / max(len(scored), 1):.1%}", delta_color="off")
+    k3.metric("🟠 Medium Watchlist", f"{n_med:,}", f"{n_med / max(len(scored), 1):.1%}", delta_color="off")
+    k4.metric("🟢 Low / Normal", f"{n_lo:,}", f"{n_lo / max(len(scored), 1):.1%}", delta_color="off")
+
+    counts = pd.DataFrame({"Tier": ["High", "Medium", "Low"], "Count": [n_hi, n_med, n_lo]})
+    bar = alt.Chart(counts).mark_bar(cornerRadiusTopLeft=5, cornerRadiusTopRight=5, size=55).encode(
+        x=alt.X("Tier:N", sort=["High", "Medium", "Low"], title=None, axis=alt.Axis(labelAngle=0)),
+        y=alt.Y("Count:Q", title="Transactions"),
+        color=alt.Color("Tier:N", legend=None,
+                        scale=alt.Scale(domain=["High", "Medium", "Low"], range=["#EF4444", "#F59E0B", "#22C55E"])),
+        tooltip=["Tier", "Count"],
+    ).properties(height=210)
+    st.altair_chart(bar, use_container_width=True)
+
+    show_cols = ["Rank", "Tier", "txId", TIME, AMOUNT, "risk_score", "Pattern", "Why Flagged"]
+    st.dataframe(
+        scored[show_cols], hide_index=True, use_container_width=True, height=380,
+        column_config={
+            "txId": st.column_config.TextColumn("Transaction ID"),
+            TIME: st.column_config.NumberColumn("Window"),
+            AMOUNT: st.column_config.NumberColumn("Amount (BTC)", format="%.4f"),
+            "risk_score": st.column_config.ProgressColumn("Anomaly Score", min_value=0, max_value=100, format="%.1f"),
+            "Why Flagged": st.column_config.TextColumn("Why Flagged", width="large"),
+        },
+    )
+    st.download_button("⬇️ Download Scored Results (.csv)", scored.to_csv(index=False),
+                       "scanned_transactions.csv", "text/csv")
+
+
 PAGES = {
     "home": st.Page(page_home, title="Command Center", icon="🛡️", default=True),
     "queue": st.Page(page_queue, title="Ranked Flows", icon="🚨", url_path="queue"),
     "chains": st.Page(page_chains, title="Suspicious Chains", icon="🔗", url_path="chains"),
     "proof": st.Page(page_proof, title="Model & Drift Lab", icon="📊", url_path="lab"),
+    "scan": st.Page(page_scan, title="Scan Your CSV", icon="⚡", url_path="scan"),
 }
 nav = st.navigation(list(PAGES.values()))
 nav.run()
