@@ -2,6 +2,8 @@
 
 Run with:  streamlit run app/app.py
 """
+import hashlib
+import hmac
 import html
 import json
 import sys
@@ -869,12 +871,120 @@ def page_scan():
                        "scanned_transactions.csv", "text/csv")
 
 
-PAGES = {
-    "home": st.Page(page_home, title="Command Center", icon=":material/dashboard:", default=True),
-    "queue": st.Page(page_queue, title="Ranked Flows", icon=":material/format_list_numbered:", url_path="queue"),
-    "chains": st.Page(page_chains, title="Suspicious Chains", icon=":material/hub:", url_path="chains"),
-    "proof": st.Page(page_proof, title="Model & Drift Lab", icon=":material/monitoring:", url_path="lab"),
-    "scan": st.Page(page_scan, title="Scan Your CSV", icon=":material/upload_file:", url_path="scan"),
-}
-nav = st.navigation(list(PAGES.values()))
-nav.run()
+PROFILE_STORE = ROOT / ".profiles.json"
+
+
+def _hash_pw(pw: str) -> str:
+    return hashlib.sha256(pw.encode("utf-8")).hexdigest()
+
+
+def _load_profiles() -> dict:
+    if "profiles" not in st.session_state:
+        data = {}
+        if PROFILE_STORE.exists():
+            try:
+                data = json.loads(PROFILE_STORE.read_text(encoding="utf-8"))
+            except Exception:
+                data = {}
+        st.session_state["profiles"] = data
+    return st.session_state["profiles"]
+
+
+def _save_profiles(profiles: dict) -> None:
+    st.session_state["profiles"] = profiles
+    try:
+        PROFILE_STORE.write_text(json.dumps(profiles, indent=2), encoding="utf-8")
+    except OSError:
+        pass
+
+
+def page_login():
+    _, mid, _ = st.columns([1, 1.35, 1])
+    with mid:
+        st.write("")
+        st.title("Bitcoin Flow Intelligence")
+        st.caption("Create an analyst profile or sign in to access the live CSV scanner and AML dashboard.")
+
+        tab_create, tab_signin = st.tabs(["Create Profile", "Sign In"])
+
+        with tab_create:
+            with st.form("create_profile_form"):
+                name = st.text_input("Full Name", placeholder="e.g. Naina Sharma")
+                username = st.text_input("Username or Email", placeholder="e.g. naina@aml-desk.io")
+                role = st.selectbox("Role", ["AML Analyst", "Compliance Officer", "Security Researcher", "Student / Demo"])
+                password = st.text_input("Password", type="password", placeholder="Minimum 4 characters")
+                submitted = st.form_submit_button(
+                    "Create Profile & Open Scanner", type="primary", use_container_width=True
+                )
+                if submitted:
+                    uname = username.strip().lower()
+                    if not name.strip() or not uname:
+                        st.error("Please enter both your name and a username or email.")
+                    elif len(password) < 4:
+                        st.error("Password must be at least 4 characters.")
+                    else:
+                        profiles = _load_profiles()
+                        if uname in profiles:
+                            st.error("A profile with that username already exists. Switch to Sign In.")
+                        else:
+                            profile = {
+                                "name": name.strip(),
+                                "username": uname,
+                                "role": role,
+                                "password_hash": _hash_pw(password),
+                            }
+                            profiles[uname] = profile
+                            _save_profiles(profiles)
+                            st.session_state["user_profile"] = {
+                                "name": profile["name"],
+                                "username": uname,
+                                "role": role,
+                            }
+                            st.rerun()
+
+        with tab_signin:
+            with st.form("signin_form"):
+                login_user = st.text_input("Username or Email", key="login_user")
+                login_pw = st.text_input("Password", type="password", key="login_pw")
+                signin_btn = st.form_submit_button("Sign In", type="primary", use_container_width=True)
+                if signin_btn:
+                    profiles = _load_profiles()
+                    uname = login_user.strip().lower()
+                    prof = profiles.get(uname)
+                    if prof and hmac.compare_digest(prof["password_hash"], _hash_pw(login_pw)):
+                        st.session_state["user_profile"] = {
+                            "name": prof["name"],
+                            "username": uname,
+                            "role": prof["role"],
+                        }
+                        st.rerun()
+                    else:
+                        st.error("Invalid username/email or password.")
+
+        if st.button("Continue as Guest Analyst", use_container_width=True):
+            st.session_state["user_profile"] = {
+                "name": "Guest Analyst",
+                "username": "guest",
+                "role": "Guest",
+            }
+            st.rerun()
+
+
+if not st.session_state.get("user_profile"):
+    st.navigation([st.Page(page_login, title="Sign In", default=True)], position="hidden").run()
+else:
+    user = st.session_state["user_profile"]
+    PAGES = {
+        "scan": st.Page(page_scan, title="Scan Your CSV", icon=":material/upload_file:", default=True),
+        "home": st.Page(page_home, title="Command Center", icon=":material/dashboard:", url_path="overview"),
+        "queue": st.Page(page_queue, title="Ranked Flows", icon=":material/format_list_numbered:", url_path="queue"),
+        "chains": st.Page(page_chains, title="Suspicious Chains", icon=":material/hub:", url_path="chains"),
+        "proof": st.Page(page_proof, title="Model & Drift Lab", icon=":material/monitoring:", url_path="lab"),
+    }
+    with st.sidebar:
+        st.caption(f"Signed in as **{user['name']}** ({user['role']})")
+        if st.button("Sign Out", icon=":material/logout:", use_container_width=True):
+            st.session_state.pop("user_profile", None)
+            st.rerun()
+    nav = st.navigation(list(PAGES.values()))
+    nav.run()
