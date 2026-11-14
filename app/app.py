@@ -49,24 +49,79 @@ st.set_page_config(
 
 st.markdown("""
 <style>
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500;600&display=swap');
+
+html, body, [class*="css"] {
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+}
+.stApp {
+    background:
+        radial-gradient(ellipse 70% 50% at 12% 10%, rgba(56, 189, 248, 0.11), transparent 60%),
+        radial-gradient(ellipse 60% 50% at 88% 90%, rgba(37, 99, 235, 0.10), transparent 60%),
+        linear-gradient(180deg, #050913 0%, #091020 55%, #060B16 100%) !important;
+    background-attachment: fixed !important;
+}
+[data-testid="stAppViewContainer"], [data-testid="stMain"], [data-testid="stHeader"] {
+    background: transparent !important;
+}
+.block-container {
+    padding-top: 1.8rem !important;
+    padding-bottom: 2.5rem !important;
+    max-width: 1400px !important;
+}
 [data-testid="stMetric"] {
-    background: linear-gradient(180deg, #111827 0%, #0F172A 100%);
-    border: 1px solid #1E293B;
+    background: linear-gradient(180deg, rgba(17, 24, 39, 0.92) 0%, rgba(11, 17, 32, 0.96) 100%);
+    border: 1px solid rgba(56, 189, 248, 0.18);
     border-top: 3px solid #38BDF8;
     border-radius: 12px;
-    padding: 14px 18px;
-    box-shadow: 0 4px 14px rgba(0, 0, 0, 0.25);
+    padding: 15px 18px;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.32);
     transition: border-color 0.2s ease, transform 0.2s ease;
 }
 [data-testid="stMetric"]:hover {
-    border-color: #38BDF8;
+    border-color: rgba(56, 189, 248, 0.55);
     transform: translateY(-2px);
 }
-[data-testid="stMetricLabel"] { color: #94A3B8 !important; font-size: 0.85rem !important; }
-[data-testid="stMetricValue"] { color: #F8FAFC !important; font-weight: 700 !important; }
+[data-testid="stMetricLabel"] {
+    color: #94A3B8 !important;
+    font-size: 0.8rem !important;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    font-weight: 600 !important;
+}
+[data-testid="stMetricValue"] {
+    color: #F8FAFC !important;
+    font-weight: 700 !important;
+    font-family: 'JetBrains Mono', monospace !important;
+}
+[data-testid="stForm"], [data-testid="stVerticalBlockBorderWrapper"] {
+    background: linear-gradient(165deg, rgba(15, 23, 42, 0.82) 0%, rgba(9, 14, 27, 0.92) 100%) !important;
+    border: 1px solid rgba(56, 189, 248, 0.18) !important;
+    border-radius: 14px !important;
+    box-shadow: 0 12px 32px rgba(0, 0, 0, 0.35);
+}
+[data-testid="stFileUploaderDropzone"] {
+    background: rgba(15, 23, 42, 0.65) !important;
+    border: 1.5px dashed rgba(56, 189, 248, 0.40) !important;
+    border-radius: 12px !important;
+}
+.stButton > button[kind="primary"], [data-testid="stFormSubmitButton"] > button {
+    background: linear-gradient(135deg, #0284C7 0%, #2563EB 100%) !important;
+    border: 1px solid rgba(125, 211, 252, 0.35) !important;
+    color: #F8FAFC !important;
+    font-weight: 600 !important;
+    border-radius: 10px !important;
+    box-shadow: 0 6px 18px rgba(2, 132, 199, 0.32) !important;
+    transition: all 0.2s ease !important;
+}
+.stButton > button[kind="primary"]:hover, [data-testid="stFormSubmitButton"] > button:hover {
+    border-color: #7DD3FC !important;
+    box-shadow: 0 8px 24px rgba(56, 189, 248, 0.45) !important;
+    transform: translateY(-1px);
+}
 .card {
-    background: linear-gradient(180deg, #111827 0%, #0F172A 100%);
-    border: 1px solid #1E293B;
+    background: linear-gradient(180deg, rgba(17, 24, 39, 0.90) 0%, rgba(11, 17, 32, 0.95) 100%);
+    border: 1px solid rgba(56, 189, 248, 0.18);
     border-top: 2px solid #38BDF8;
     border-radius: 12px;
     padding: 18px 20px;
@@ -74,17 +129,90 @@ st.markdown("""
     display: flex;
     flex-direction: column;
     justify-content: flex-start;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+    box-shadow: 0 6px 18px rgba(0, 0, 0, 0.25);
 }
-.card h4 { margin: 0 0 8px 0; color: #38BDF8; font-size: 1rem; }
-.card p { margin: 0; color: #CBD5E1; font-size: 0.9rem; line-height: 1.5; }
+.card h4 { margin: 0 0 8px 0; color: #38BDF8; font-size: 0.98rem; font-weight: 600; }
+.card p { margin: 0; color: #CBD5E1; font-size: 0.88rem; line-height: 1.5; }
+.page-banner {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 12px;
+    padding: 18px 22px;
+    margin-bottom: 20px;
+    border-radius: 14px;
+    background: linear-gradient(135deg, rgba(15, 23, 42, 0.92) 0%, rgba(11, 19, 38, 0.88) 100%);
+    border: 1px solid rgba(56, 189, 248, 0.22);
+    border-left: 4px solid #38BDF8;
+    box-shadow: 0 10px 28px rgba(0, 0, 0, 0.32);
+}
+.page-banner-kicker {
+    color: #38BDF8;
+    font-size: 0.72rem;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    margin-bottom: 4px;
+}
+.page-banner-title {
+    color: #F8FAFC;
+    font-size: 1.55rem;
+    font-weight: 700;
+    letter-spacing: -0.02em;
+    margin: 0;
+}
+.page-banner-sub {
+    color: #94A3B8;
+    font-size: 0.88rem;
+    margin: 4px 0 0 0;
+}
+.page-banner-status {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 6px 13px;
+    border-radius: 999px;
+    background: rgba(16, 185, 129, 0.10);
+    border: 1px solid rgba(16, 185, 129, 0.32);
+    color: #6EE7B7;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.73rem;
+    font-weight: 600;
+}
+.status-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: #10B981;
+    box-shadow: 0 0 8px #10B981;
+}
 [data-testid="stSidebar"] {
-    background: linear-gradient(180deg, #070C18 0%, #0B1222 100%);
+    background: linear-gradient(180deg, #060A15 0%, #0A1122 100%);
     border-right: 1px solid #1E293B;
 }
 [data-testid="stHeaderActionElements"] { display: none; }
 </style>
 """, unsafe_allow_html=True)
+
+
+def render_page_header(kicker: str, title: str, subtitle: str) -> None:
+    st.markdown(
+        f"""
+        <div class="page-banner">
+            <div>
+                <div class="page-banner-kicker">{html.escape(kicker)}</div>
+                <h1 class="page-banner-title">{html.escape(title)}</h1>
+                <p class="page-banner-sub">{html.escape(subtitle)}</p>
+            </div>
+            <div class="page-banner-status">
+                <span class="status-dot"></span>
+                ENGINE ONLINE · 182-FEATURE HYBRID
+            </div>
+        </div>
+        """,
+        unsafe_allow_html=True,
+    )
 
 
 # --------------------------------------------------------------------------- #
@@ -276,8 +404,11 @@ def legend():
 # Page 1: Command Center
 # --------------------------------------------------------------------------- #
 def page_home():
-    st.title("Command Center")
-    st.caption("Overview of scanned Bitcoin traffic, high-risk alert patterns, and detection architecture.")
+    render_page_header(
+        "Executive Telemetry",
+        "Command Center",
+        "Overview of scanned Bitcoin traffic, high-risk alert patterns, and detection architecture.",
+    )
 
     vp, vb = SUM["verified_precision_final"], SUM["verified_precision_baseline"]
     c1, c2, c3, c4 = st.columns(4)
@@ -421,8 +552,11 @@ def page_home():
 # Page 2: Ranked Flows (Investigator Workbench)
 # --------------------------------------------------------------------------- #
 def page_queue():
-    st.title("Ranked Flows")
-    st.caption("Statistically unusual Bitcoin flows ranked from #1 downward, plus the stratified Top-500 verification audit.")
+    render_page_header(
+        "Investigator Workbench",
+        "Ranked Flows",
+        "Statistically unusual Bitcoin flows ranked from #1 downward, plus the stratified Top-500 verification audit.",
+    )
 
     tab_rank, tab_audit = st.tabs(["Ranked Anomaly List", "Verified Sample Audit (Top 500)"])
 
@@ -576,8 +710,11 @@ def detail(r):
 # Page 3: Suspicious Chains
 # --------------------------------------------------------------------------- #
 def page_chains():
-    st.title("Suspicious Chains")
-    st.write("Connected clusters of high-risk transactions passing funds directly to each other.")
+    render_page_header(
+        "Multi-Hop Contagion",
+        "Suspicious Chains",
+        "Connected clusters of high-risk transactions passing funds directly to each other.",
+    )
     ch = D["chains"].copy()
     if ch.empty:
         st.info("No multi-transaction chains found.")
@@ -635,8 +772,11 @@ def page_chains():
 # Page 4: Model & Drift Lab
 # --------------------------------------------------------------------------- #
 def page_proof():
-    st.title("Model & Drift Lab")
-    st.caption("Evaluation on untouched test windows 35–49, alert-budget trade-offs, and drift resilience.")
+    render_page_header(
+        "Backtesting & Validation",
+        "Model & Drift Lab",
+        "Evaluation on untouched test windows 35–49, alert-budget trade-offs, and drift resilience.",
+    )
 
     st.subheader("1. Alert Budget Simulator")
     with st.container(border=True):
@@ -776,8 +916,11 @@ def page_proof():
 # Page 5: Scan Your CSV (Live ML Inference)
 # --------------------------------------------------------------------------- #
 def page_scan():
-    st.title("Scan Your CSV")
-    st.caption("Upload any Bitcoin transaction CSV to run the trained anomaly-detection pipeline live.")
+    render_page_header(
+        "Live ML Screening Engine",
+        "Scan Your CSV",
+        "Upload any Bitcoin transaction CSV to run the trained 182-feature anomaly-detection pipeline live.",
+    )
 
     bundle = load_bundle()
     if bundle is None:
@@ -928,191 +1071,321 @@ def _save_profiles(profiles: dict) -> None:
 def page_login():
     st.markdown("""
     <style>
-    .stApp {
-        background:
-            radial-gradient(ellipse 65% 50% at 12% 18%, rgba(56, 189, 248, 0.14), transparent 60%),
-            radial-gradient(ellipse 55% 45% at 88% 85%, rgba(59, 130, 246, 0.12), transparent 60%),
-            linear-gradient(180deg, #060B16 0%, #0A1120 100%) !important;
-        background-attachment: fixed !important;
+    .login-topbar {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        flex-wrap: wrap;
+        gap: 12px;
+        padding: 14px 20px;
+        margin-bottom: 24px;
+        border-radius: 12px;
+        background: rgba(11, 18, 34, 0.85);
+        border: 1px solid rgba(56, 189, 248, 0.22);
     }
-    [data-testid="stAppViewContainer"], [data-testid="stMain"], [data-testid="stHeader"] {
-        background: transparent !important;
-    }
-    [data-testid="stForm"] {
-        background: rgba(13, 20, 36, 0.92) !important;
-        border: 1px solid #1E293B !important;
-        border-radius: 14px !important;
-        padding: 24px 26px !important;
-        box-shadow: 0 20px 50px rgba(0, 0, 0, 0.45);
-    }
-    .sec-eyebrow {
-        display: inline-block;
-        padding: 5px 12px;
-        border-radius: 999px;
-        background: rgba(56, 189, 248, 0.10);
-        border: 1px solid rgba(56, 189, 248, 0.30);
-        color: #38BDF8;
-        font-size: 0.74rem;
-        font-weight: 600;
-        letter-spacing: 0.08em;
+    .login-brand {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        color: #F8FAFC;
+        font-weight: 700;
+        font-size: 0.96rem;
+        letter-spacing: 0.04em;
         text-transform: uppercase;
-        margin-bottom: 14px;
+    }
+    .login-brand-badge {
+        width: 28px;
+        height: 28px;
+        border-radius: 8px;
+        background: linear-gradient(135deg, #0284C7, #2563EB);
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        color: #F8FAFC;
+        font-weight: 800;
+        font-size: 0.95rem;
+    }
+    .login-pills {
+        display: flex;
+        gap: 8px;
+        flex-wrap: wrap;
+    }
+    .login-pill {
+        padding: 4px 10px;
+        border-radius: 999px;
+        background: rgba(15, 23, 42, 0.9);
+        border: 1px solid #1E293B;
+        color: #94A3B8;
+        font-family: 'JetBrains Mono', monospace;
+        font-size: 0.71rem;
+    }
+    .login-pill-green {
+        border-color: rgba(16, 185, 129, 0.35);
+        color: #6EE7B7;
+        background: rgba(16, 185, 129, 0.08);
     }
     .sec-title {
-        font-size: 2.35rem;
+        font-size: 2.3rem;
         font-weight: 700;
         line-height: 1.15;
-        letter-spacing: -0.02em;
+        letter-spacing: -0.025em;
         color: #F8FAFC;
-        margin: 0 0 12px 0;
+        margin: 0 0 10px 0;
     }
     .sec-lead {
         color: #94A3B8;
-        font-size: 1rem;
+        font-size: 0.96rem;
         line-height: 1.6;
-        margin: 0 0 24px 0;
+        margin: 0 0 18px 0;
     }
-    .sec-pillar {
-        background: rgba(15, 23, 42, 0.65);
+    .graph-preview {
+        background: linear-gradient(180deg, rgba(11, 18, 34, 0.95) 0%, rgba(7, 12, 24, 0.98) 100%);
+        border: 1px solid rgba(56, 189, 248, 0.24);
+        border-radius: 14px;
+        padding: 16px 18px;
+        margin-bottom: 16px;
+        box-shadow: 0 14px 36px rgba(0, 0, 0, 0.45);
+    }
+    .graph-preview-hdr {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 10px;
+        font-family: 'JetBrains Mono', monospace;
+        font-size: 0.73rem;
+        color: #94A3B8;
+    }
+    .sec-grid {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 10px;
+    }
+    .sec-tile {
+        background: rgba(15, 23, 42, 0.72);
         border: 1px solid #1E293B;
-        border-left: 3px solid #38BDF8;
+        border-top: 2px solid #38BDF8;
         border-radius: 10px;
-        padding: 13px 16px;
-        margin-bottom: 12px;
+        padding: 12px 13px;
     }
-    .sec-pillar h5 {
+    .sec-tile h5 {
         margin: 0 0 4px 0;
         color: #F1F5F9;
-        font-size: 0.92rem;
+        font-size: 0.82rem;
         font-weight: 600;
     }
-    .sec-pillar p {
+    .sec-tile p {
         margin: 0;
         color: #94A3B8;
-        font-size: 0.84rem;
-        line-height: 1.45;
+        font-size: 0.76rem;
+        line-height: 1.4;
+    }
+    .auth-hdr {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        margin-bottom: 6px;
+    }
+    .auth-title {
+        color: #F8FAFC;
+        font-size: 1.18rem;
+        font-weight: 700;
+        margin: 0;
+    }
+    .auth-badge {
+        font-family: 'JetBrains Mono', monospace;
+        font-size: 0.70rem;
+        padding: 3px 9px;
+        border-radius: 6px;
+        background: rgba(56, 189, 248, 0.12);
+        border: 1px solid rgba(56, 189, 248, 0.32);
+        color: #38BDF8;
     }
     </style>
+
+    <div class="login-topbar">
+        <div class="login-brand">
+            <span class="login-brand-badge">&#8383;</span>
+            Bitcoin Flow Intelligence · Security &amp; AML Screening
+        </div>
+        <div class="login-pills">
+            <span class="login-pill login-pill-green">● ENGINE ONLINE</span>
+            <span class="login-pill">PBKDF2-SHA256 · 120K ITER</span>
+            <span class="login-pill">ZERO-RETENTION CSV SCANNER</span>
+        </div>
+    </div>
     """, unsafe_allow_html=True)
 
-    st.write("")
-    left_col, right_col = st.columns([1.08, 1.0], gap="large")
+    left_col, right_col = st.columns([1.15, 1.0], gap="large")
 
     with left_col:
         st.markdown("""
-        <div style="padding: 18px 8px 0 0;">
-            <div class="sec-eyebrow">Bitcoin AML &amp; Anomaly Security</div>
-            <h1 class="sec-title">Bitcoin Flow Intelligence</h1>
+        <div>
+            <h1 class="sec-title">Enterprise Bitcoin Transaction &amp; AML Screening</h1>
             <p class="sec-lead">
-                Screen Bitcoin transaction datasets for illicit bursts, peeling chains, and structural anomalies
-                before funds move downstream.
+                Detect high-risk peeling chains, synchronized twin bursts, and structural anomalies across
+                uploaded Bitcoin transaction CSVs in real time.
             </p>
-            <div class="sec-pillar">
-                <h5>Salted PBKDF2-SHA256 Authentication</h5>
-                <p>Analyst credentials are protected with per-user random salts, 120k-iteration hashing, and brute-force lockout.</p>
+            <div class="graph-preview">
+                <div class="graph-preview-hdr">
+                    <span>LIVE THREAT TOPOLOGY · PEELING CHAIN DETECTION</span>
+                    <span style="color:#FCA5A5;">ALERT SCORE: 98.4 / 100</span>
+                </div>
+                <svg viewBox="0 0 540 155" width="100%" height="155" xmlns="http://www.w3.org/2000/svg">
+                    <defs>
+                        <marker id="arr-red" viewBox="0 0 10 10" refX="7" refY="5" markerWidth="6" markerHeight="6" orient="auto">
+                            <path d="M 0 1 L 10 5 L 0 9 z" fill="#EF4444"/>
+                        </marker>
+                        <marker id="arr-slate" viewBox="0 0 10 10" refX="7" refY="5" markerWidth="5" markerHeight="5" orient="auto">
+                            <path d="M 0 1 L 10 5 L 0 9 z" fill="#475569"/>
+                        </marker>
+                    </defs>
+                    <path d="M 118 45 C 155 45, 165 45, 200 45" stroke="#EF4444" stroke-width="2.2" fill="none" marker-end="url(#arr-red)"/>
+                    <path d="M 320 45 C 355 45, 365 45, 400 45" stroke="#EF4444" stroke-width="2.2" fill="none" marker-end="url(#arr-red)"/>
+                    <path d="M 118 45 C 155 55, 165 112, 200 112" stroke="#475569" stroke-width="1.5" stroke-dasharray="4 3" fill="none" marker-end="url(#arr-slate)"/>
+                    <path d="M 320 45 C 355 55, 365 112, 400 112" stroke="#475569" stroke-width="1.5" stroke-dasharray="4 3" fill="none" marker-end="url(#arr-slate)"/>
+
+                    <rect x="12" y="22" width="106" height="46" rx="8" fill="#450A0A" stroke="#EF4444" stroke-width="1.6"/>
+                    <text x="22" y="41" fill="#FCA5A5" font-family="monospace" font-size="11" font-weight="bold">Tx #298410</text>
+                    <text x="22" y="57" fill="#FCA5A5" font-family="sans-serif" font-size="10">14.82 BTC · 96/100</text>
+
+                    <rect x="206" y="22" width="114" height="46" rx="8" fill="#450A0A" stroke="#EF4444" stroke-width="1.6"/>
+                    <text x="216" y="41" fill="#FCA5A5" font-family="monospace" font-size="11" font-weight="bold">Tx #298894</text>
+                    <text x="216" y="57" fill="#FCA5A5" font-family="sans-serif" font-size="10">14.10 BTC · 98/100</text>
+
+                    <rect x="406" y="22" width="120" height="46" rx="8" fill="#450A0A" stroke="#EF4444" stroke-width="1.6"/>
+                    <text x="416" y="41" fill="#FCA5A5" font-family="monospace" font-size="11" font-weight="bold">Tx #299102</text>
+                    <text x="416" y="57" fill="#FCA5A5" font-family="sans-serif" font-size="10">13.45 BTC · 99/100</text>
+
+                    <rect x="206" y="92" width="114" height="42" rx="8" fill="#052E16" stroke="#22C55E" stroke-width="1.2"/>
+                    <text x="216" y="110" fill="#86EFAC" font-family="monospace" font-size="10" font-weight="bold">Peel Output #1</text>
+                    <text x="216" y="124" fill="#86EFAC" font-family="sans-serif" font-size="9.5">0.72 BTC · Low</text>
+
+                    <rect x="406" y="92" width="120" height="42" rx="8" fill="#451A03" stroke="#F59E0B" stroke-width="1.2"/>
+                    <text x="416" y="110" fill="#FCD34D" font-family="monospace" font-size="10" font-weight="bold">Burst Fan-Out</text>
+                    <text x="416" y="124" fill="#FCD34D" font-family="sans-serif" font-size="9.5">0.65 BTC · Watch</text>
+                </svg>
             </div>
-            <div class="sec-pillar">
-                <h5>Live CSV &amp; Multi-Signal Scoring</h5>
-                <p>Scores uploaded transaction files across 182 trained structural, fee, and burst-similarity features.</p>
-            </div>
-            <div class="sec-pillar">
-                <h5>Zero-Retention Session Processing</h5>
-                <p>Uploaded transaction CSVs are analyzed strictly in-memory for your active session and never stored on disk.</p>
+            <div class="sec-grid">
+                <div class="sec-tile">
+                    <h5>Salted PBKDF2 Auth</h5>
+                    <p>Per-user 16-byte salt, 120k SHA-256 rounds, and brute-force lockout protection.</p>
+                </div>
+                <div class="sec-tile">
+                    <h5>182-Feature Hybrid ML</h5>
+                    <p>Combines structural outlier detection, look-alike burst scoring, and graph chains.</p>
+                </div>
+                <div class="sec-tile">
+                    <h5>Zero-Retention Scan</h5>
+                    <p>Uploaded CSV datasets are scored in-memory and never persisted to disk.</p>
+                </div>
             </div>
         </div>
         """, unsafe_allow_html=True)
 
     with right_col:
-        tab_create, tab_signin = st.tabs(["Create Profile", "Sign In"])
+        with st.container(border=True):
+            st.markdown("""
+            <div class="auth-hdr">
+                <p class="auth-title">Analyst Authentication Portal</p>
+                <span class="auth-badge">PROTECTED SESSION</span>
+            </div>
+            """, unsafe_allow_html=True)
 
-        with tab_create:
-            with st.form("create_profile_form"):
-                name = st.text_input("Full Name", placeholder="e.g. Naina Sharma")
-                username = st.text_input("Work Email or Username", placeholder="e.g. naina@aml-desk.io")
-                role = st.selectbox("Role", ["AML Analyst", "Compliance Officer", "Security Researcher", "Auditor"])
-                password = st.text_input("Password", type="password", placeholder="8+ chars, letters & numbers")
-                confirm_pw = st.text_input("Confirm Password", type="password", placeholder="Re-enter password")
-                submitted = st.form_submit_button(
-                    "Create Profile & Open Scanner", type="primary", use_container_width=True
-                )
-                if submitted:
-                    uname = username.strip().lower()
-                    pw_err = _validate_password(password)
-                    if not name.strip() or not uname:
-                        st.error("Please enter both your name and a username or email.")
-                    elif pw_err:
-                        st.error(pw_err)
-                    elif password != confirm_pw:
-                        st.error("Passwords do not match.")
-                    else:
+            tab_create, tab_signin = st.tabs(["Create Profile", "Sign In"])
+
+            with tab_create:
+                with st.form("create_profile_form"):
+                    name = st.text_input("Full Name", placeholder="e.g. Naina Sharma")
+                    username = st.text_input("Work Email or Username", placeholder="e.g. naina@aml-desk.io")
+                    role = st.selectbox("Role", ["AML Analyst", "Compliance Officer", "Security Researcher", "Auditor"])
+                    c_pw1, c_pw2 = st.columns(2)
+                    password = c_pw1.text_input("Password", type="password", placeholder="8+ chars, alphanumeric")
+                    confirm_pw = c_pw2.text_input("Confirm Password", type="password", placeholder="Repeat password")
+                    submitted = st.form_submit_button(
+                        "Create Profile & Open CSV Scanner", type="primary", use_container_width=True
+                    )
+                    if submitted:
+                        uname = username.strip().lower()
+                        pw_err = _validate_password(password)
+                        if not name.strip() or not uname:
+                            st.error("Please enter both your full name and a username or email.")
+                        elif pw_err:
+                            st.error(pw_err)
+                        elif password != confirm_pw:
+                            st.error("Passwords do not match.")
+                        else:
+                            profiles = _load_profiles()
+                            if uname in profiles:
+                                st.error("A profile with that username already exists. Switch to Sign In.")
+                            else:
+                                profile = {
+                                    "name": name.strip(),
+                                    "username": uname,
+                                    "role": role,
+                                    "password_hash": _hash_pw(password),
+                                }
+                                profiles[uname] = profile
+                                _save_profiles(profiles)
+                                st.session_state["user_profile"] = {
+                                    "name": profile["name"],
+                                    "username": uname,
+                                    "role": role,
+                                    "session_id": secrets.token_hex(4).upper(),
+                                }
+                                st.session_state["login_attempts"] = 0
+                                st.rerun()
+
+            with tab_signin:
+                lock_until = st.session_state.get("lockout_until", 0.0)
+                remaining = int(lock_until - time.time())
+                if remaining > 0:
+                    st.warning(f"Too many failed sign-in attempts. Please wait {remaining}s before trying again.")
+                with st.form("signin_form"):
+                    login_user = st.text_input("Work Email or Username", key="login_user")
+                    login_pw = st.text_input("Password", type="password", key="login_pw")
+                    signin_btn = st.form_submit_button(
+                        "Sign In to Scanner", type="primary", use_container_width=True, disabled=remaining > 0
+                    )
+                    if signin_btn:
                         profiles = _load_profiles()
-                        if uname in profiles:
-                            st.error("A profile with that username already exists. Switch to Sign In.")
-                        else:
-                            profile = {
-                                "name": name.strip(),
-                                "username": uname,
-                                "role": role,
-                                "password_hash": _hash_pw(password),
-                            }
-                            profiles[uname] = profile
-                            _save_profiles(profiles)
+                        uname = login_user.strip().lower()
+                        prof = profiles.get(uname)
+                        if prof and _verify_pw(login_pw, prof["password_hash"]):
                             st.session_state["user_profile"] = {
-                                "name": profile["name"],
+                                "name": prof["name"],
                                 "username": uname,
-                                "role": role,
+                                "role": prof["role"],
+                                "session_id": secrets.token_hex(4).upper(),
                             }
                             st.session_state["login_attempts"] = 0
+                            st.session_state.pop("lockout_until", None)
                             st.rerun()
-
-        with tab_signin:
-            lock_until = st.session_state.get("lockout_until", 0.0)
-            remaining = int(lock_until - time.time())
-            if remaining > 0:
-                st.warning(f"Too many failed sign-in attempts. Please wait {remaining}s before trying again.")
-            with st.form("signin_form"):
-                login_user = st.text_input("Work Email or Username", key="login_user")
-                login_pw = st.text_input("Password", type="password", key="login_pw")
-                signin_btn = st.form_submit_button(
-                    "Sign In", type="primary", use_container_width=True, disabled=remaining > 0
-                )
-                if signin_btn:
-                    profiles = _load_profiles()
-                    uname = login_user.strip().lower()
-                    prof = profiles.get(uname)
-                    if prof and _verify_pw(login_pw, prof["password_hash"]):
-                        st.session_state["user_profile"] = {
-                            "name": prof["name"],
-                            "username": uname,
-                            "role": prof["role"],
-                        }
-                        st.session_state["login_attempts"] = 0
-                        st.session_state.pop("lockout_until", None)
-                        st.rerun()
-                    else:
-                        attempts = st.session_state.get("login_attempts", 0) + 1
-                        st.session_state["login_attempts"] = attempts
-                        if attempts >= MAX_LOGIN_ATTEMPTS:
-                            st.session_state["lockout_until"] = time.time() + LOCKOUT_SECONDS
-                            st.session_state["login_attempts"] = 0
-                            st.error(f"Account temporarily locked for {LOCKOUT_SECONDS}s after {MAX_LOGIN_ATTEMPTS} failed attempts.")
                         else:
-                            left_tries = MAX_LOGIN_ATTEMPTS - attempts
-                            st.error(f"Invalid credentials. {left_tries} attempt(s) remaining before temporary lockout.")
+                            attempts = st.session_state.get("login_attempts", 0) + 1
+                            st.session_state["login_attempts"] = attempts
+                            if attempts >= MAX_LOGIN_ATTEMPTS:
+                                st.session_state["lockout_until"] = time.time() + LOCKOUT_SECONDS
+                                st.session_state["login_attempts"] = 0
+                                st.error(f"Account temporarily locked for {LOCKOUT_SECONDS}s after {MAX_LOGIN_ATTEMPTS} failed attempts.")
+                            else:
+                                left_tries = MAX_LOGIN_ATTEMPTS - attempts
+                                st.error(f"Invalid credentials. {left_tries} attempt(s) remaining before temporary lockout.")
 
-        if st.button("Continue with Demo Access", icon=":material/verified_user:", use_container_width=True):
-            st.session_state["user_profile"] = {
-                "name": "Demo Analyst",
-                "username": "demo",
-                "role": "Read-Only Demo",
-            }
-            st.rerun()
+            if st.button("Launch Instant Demo Sandbox", icon=":material/verified_user:", use_container_width=True):
+                st.session_state["user_profile"] = {
+                    "name": "Demo Analyst",
+                    "username": "demo",
+                    "role": "Sandbox Session",
+                    "session_id": secrets.token_hex(4).upper(),
+                }
+                st.rerun()
 
 
 if not st.session_state.get("user_profile"):
     st.navigation([st.Page(page_login, title="Sign In", default=True)], position="hidden").run()
 else:
     user = st.session_state["user_profile"]
+    sid = user.get("session_id", "ACTIVE")
     PAGES = {
         "scan": st.Page(page_scan, title="Scan Your CSV", icon=":material/upload_file:", default=True),
         "home": st.Page(page_home, title="Command Center", icon=":material/dashboard:", url_path="overview"),
@@ -1122,8 +1395,8 @@ else:
     }
     with st.sidebar:
         with st.container(border=True):
-            st.markdown(f"**{user['name']}**")
-            st.caption(f"{user['role']} · Active Session")
+            st.markdown(f"**{html.escape(user['name'])}**")
+            st.caption(f"{html.escape(user['role'])} · ID `{sid}`")
         if st.button("Sign Out", icon=":material/logout:", use_container_width=True):
             st.session_state.pop("user_profile", None)
             st.rerun()
