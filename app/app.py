@@ -194,131 +194,106 @@ html, body, [class*="css"] {
     border-right: 1px solid #1E293B;
 }
 [data-testid="stHeaderActionElements"] { display: none; }
-.login-topbar {
+.hero-left {
     display: flex;
-    align-items: center;
-    justify-content: space-between;
-    flex-wrap: wrap;
-    gap: 12px;
-    padding: 14px 20px;
-    margin-bottom: 24px;
-    border-radius: 12px;
-    background: rgba(11, 18, 34, 0.88);
-    border: 1px solid rgba(56, 189, 248, 0.22);
+    flex-direction: column;
+    justify-content: center;
+    padding: 28px 16px 20px 8px;
 }
-.login-brand {
+.radar-stage {
+    position: relative;
+    width: 190px;
+    height: 190px;
+    margin-bottom: 28px;
     display: flex;
-    align-items: center;
-    gap: 10px;
-    color: #F8FAFC;
-    font-weight: 700;
-    font-size: 0.96rem;
-    letter-spacing: 0.04em;
-    text-transform: uppercase;
-}
-.login-brand-badge {
-    width: 28px;
-    height: 28px;
-    border-radius: 8px;
-    background: linear-gradient(135deg, #0284C7, #2563EB);
-    display: inline-flex;
     align-items: center;
     justify-content: center;
-    color: #F8FAFC;
+}
+.radar-glow {
+    position: absolute;
+    width: 190px;
+    height: 190px;
+    border-radius: 50%;
+    background: radial-gradient(circle, rgba(56, 189, 248, 0.28) 0%, rgba(99, 102, 241, 0.16) 50%, transparent 72%);
+    filter: blur(16px);
+}
+.radar-ring-outer {
+    position: absolute;
+    width: 176px;
+    height: 176px;
+    border-radius: 50%;
+    border: 1px solid rgba(56, 189, 248, 0.28);
+    box-shadow: inset 0 0 24px rgba(56, 189, 248, 0.08);
+    animation: spinSlow 22s linear infinite;
+}
+.radar-ring-outer::after {
+    content: "";
+    position: absolute;
+    top: -4px;
+    left: 50%;
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: #38BDF8;
+    box-shadow: 0 0 12px #38BDF8;
+}
+.radar-ring-mid {
+    position: absolute;
+    width: 128px;
+    height: 128px;
+    border-radius: 50%;
+    border: 1px dashed rgba(129, 140, 248, 0.42);
+    animation: spinReverse 16s linear infinite;
+}
+.radar-core {
+    position: relative;
+    width: 78px;
+    height: 78px;
+    border-radius: 22px;
+    background: linear-gradient(145deg, rgba(15, 23, 42, 0.92), rgba(30, 41, 59, 0.78));
+    border: 1.5px solid rgba(56, 189, 248, 0.55);
+    box-shadow: 0 12px 30px rgba(0, 0, 0, 0.5), 0 0 24px rgba(56, 189, 248, 0.22);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 2.2rem;
     font-weight: 800;
-    font-size: 0.95rem;
+    color: #F8FAFC;
+    text-shadow: 0 0 16px rgba(56, 189, 248, 0.65);
 }
-.login-pills { display: flex; gap: 8px; flex-wrap: wrap; }
-.login-pill {
-    padding: 4px 10px;
-    border-radius: 999px;
-    background: rgba(15, 23, 42, 0.9);
-    border: 1px solid #1E293B;
-    color: #94A3B8;
-    font-family: 'JetBrains Mono', monospace;
-    font-size: 0.71rem;
+@keyframes spinSlow {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
 }
-.login-pill-green {
-    border-color: rgba(16, 185, 129, 0.35);
-    color: #6EE7B7;
-    background: rgba(16, 185, 129, 0.08);
+@keyframes spinReverse {
+    0% { transform: rotate(360deg); }
+    100% { transform: rotate(0deg); }
 }
 .sec-title {
-    font-size: 2.25rem;
+    font-size: 2.45rem;
     font-weight: 700;
     line-height: 1.15;
     letter-spacing: -0.025em;
-    color: #F8FAFC;
-    margin: 0 0 10px 0;
+    background: linear-gradient(95deg, #FFFFFF 0%, #BAE6FD 55%, #A5B4FC 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    margin: 0 0 22px 0;
 }
-.sec-lead {
-    color: #94A3B8;
-    font-size: 0.96rem;
-    line-height: 1.6;
-    margin: 0 0 18px 0;
-}
-.graph-preview {
-    background: linear-gradient(180deg, rgba(11, 18, 34, 0.95) 0%, rgba(7, 12, 24, 0.98) 100%);
-    border: 1px solid rgba(56, 189, 248, 0.24);
-    border-radius: 14px;
-    padding: 16px 18px;
-    margin-bottom: 16px;
-    box-shadow: 0 14px 36px rgba(0, 0, 0, 0.45);
-}
-.graph-preview-hdr {
+.hero-tags {
     display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 14px;
-    font-family: 'JetBrains Mono', monospace;
-    font-size: 0.72rem;
-    color: #94A3B8;
-}
-.flow-row {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 8px;
-    margin-bottom: 10px;
-}
-.flow-node {
-    flex: 1;
-    padding: 10px 12px;
-    border-radius: 10px;
-    font-family: 'JetBrains Mono', monospace;
-}
-.flow-node-high {
-    background: rgba(69, 10, 10, 0.85);
-    border: 1.5px solid #EF4444;
-    color: #FCA5A5;
-}
-.flow-node-med {
-    background: rgba(69, 26, 3, 0.85);
-    border: 1.5px solid #F59E0B;
-    color: #FCD34D;
-}
-.flow-node-low {
-    background: rgba(5, 46, 22, 0.85);
-    border: 1.5px solid #22C55E;
-    color: #86EFAC;
-}
-.flow-id { font-size: 0.78rem; font-weight: 700; display: block; margin-bottom: 3px; }
-.flow-meta { font-size: 0.70rem; opacity: 0.9; display: block; font-family: 'Inter', sans-serif; }
-.flow-arrow { color: #EF4444; font-weight: 700; font-size: 1.1rem; padding: 0 2px; }
-.sec-grid {
-    display: grid;
-    grid-template-columns: repeat(3, 1fr);
+    flex-wrap: wrap;
     gap: 10px;
 }
-.sec-tile {
-    background: rgba(15, 23, 42, 0.72);
-    border: 1px solid #1E293B;
-    border-top: 2px solid #38BDF8;
-    border-radius: 10px;
-    padding: 12px 13px;
+.hero-tag {
+    padding: 6px 14px;
+    border-radius: 999px;
+    background: rgba(15, 23, 42, 0.60);
+    border: 1px solid rgba(56, 189, 248, 0.25);
+    color: #CBD5E1;
+    font-size: 0.78rem;
+    font-weight: 500;
+    letter-spacing: 0.02em;
 }
-.sec-tile h5 { margin: 0 0 4px 0; color: #F1F5F9; font-size: 0.82rem; font-weight: 600; }
-.sec-tile p { margin: 0; color: #94A3B8; font-size: 0.76rem; line-height: 1.4; }
 .auth-hdr {
     display: flex;
     align-items: center;
@@ -1207,53 +1182,24 @@ def _save_profiles(profiles: dict) -> None:
 
 
 def page_login():
-    st.markdown(
-        '<div class="login-topbar">'
-        '<div class="login-brand">'
-        '<span class="login-brand-badge">&#8383;</span>'
-        'Bitcoin Flow Intelligence · Transaction Security Scanner'
-        '</div>'
-        '<div class="login-pills">'
-        '<span class="login-pill login-pill-green">● ENGINE ONLINE</span>'
-        '<span class="login-pill">PBKDF2-SHA256 · 120K ITER</span>'
-        '<span class="login-pill">ZERO-RETENTION CSV SCANNER</span>'
-        '</div>'
-        '</div>',
-        unsafe_allow_html=True,
-    )
-
-    left_col, right_col = st.columns([1.15, 1.0], gap="large")
+    st.write("")
+    st.write("")
+    left_col, right_col = st.columns([1.05, 1.0], gap="large")
 
     with left_col:
         st.markdown(
-            '<div>'
+            '<div class="hero-left">'
+            '<div class="radar-stage">'
+            '<div class="radar-glow"></div>'
+            '<div class="radar-ring-outer"></div>'
+            '<div class="radar-ring-mid"></div>'
+            '<div class="radar-core">&#8383;</div>'
+            '</div>'
             '<h1 class="sec-title">Bitcoin Transaction Anomaly &amp; Security Scanner</h1>'
-            '<p class="sec-lead">'
-            'Detect high-risk peeling chains, synchronized twin bursts, and structural anomalies across '
-            'uploaded Bitcoin transaction CSVs in real time.'
-            '</p>'
-            '<div class="graph-preview">'
-            '<div class="graph-preview-hdr">'
-            '<span>LIVE THREAT TOPOLOGY · PEELING CHAIN DETECTION</span>'
-            '<span style="color:#FCA5A5;">ALERT SCORE: 98.4 / 100</span>'
-            '</div>'
-            '<div class="flow-row">'
-            '<div class="flow-node flow-node-high"><span class="flow-id">Tx #298410</span><span class="flow-meta">14.82 BTC · Risk 96/100</span></div>'
-            '<span class="flow-arrow">→</span>'
-            '<div class="flow-node flow-node-high"><span class="flow-id">Tx #298894</span><span class="flow-meta">14.10 BTC · Risk 98/100</span></div>'
-            '<span class="flow-arrow">→</span>'
-            '<div class="flow-node flow-node-high"><span class="flow-id">Tx #299102</span><span class="flow-meta">13.45 BTC · Risk 99/100</span></div>'
-            '</div>'
-            '<div class="flow-row" style="margin-bottom:0;">'
-            '<div class="flow-node flow-node-low"><span class="flow-id">Peel Output #1</span><span class="flow-meta">0.72 BTC · Normal Change</span></div>'
-            '<span class="flow-arrow" style="color:#64748B;">⇢</span>'
-            '<div class="flow-node flow-node-med"><span class="flow-id">Burst Fan-Out</span><span class="flow-meta">0.65 BTC · Twin Burst Watch</span></div>'
-            '</div>'
-            '</div>'
-            '<div class="sec-grid">'
-            '<div class="sec-tile"><h5>Salted PBKDF2 Auth</h5><p>Per-user 16-byte salt, 120k SHA-256 rounds, and brute-force lockout protection.</p></div>'
-            '<div class="sec-tile"><h5>182-Feature Hybrid ML</h5><p>Combines structural outlier detection, look-alike burst scoring, and graph chains.</p></div>'
-            '<div class="sec-tile"><h5>Zero-Retention Scan</h5><p>Uploaded CSV datasets are scored in-memory and never persisted to disk.</p></div>'
+            '<div class="hero-tags">'
+            '<span class="hero-tag">Live CSV Screening</span>'
+            '<span class="hero-tag">Flow Graph Intelligence</span>'
+            '<span class="hero-tag">Protected Session</span>'
             '</div>'
             '</div>',
             unsafe_allow_html=True,
