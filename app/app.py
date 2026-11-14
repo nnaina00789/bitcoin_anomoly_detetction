@@ -628,89 +628,139 @@ def page_chains():
 # --------------------------------------------------------------------------- #
 def page_proof():
     st.title("Model & Drift Lab")
-    st.write("Evaluation on **untouched test windows 35–49**, plus an interactive alert-threshold simulator.")
+    st.caption("Evaluation on untouched test windows 35–49, alert-budget trade-offs, and drift resilience.")
 
-    st.header("1. Interactive Alert Budget Simulator")
-    pct_cut = st.slider("Alert threshold (flag top % of traffic)", 0.2, 10.0, 1.0, step=0.2,
-                        help="Slide to see the trade-off between investigator workload and criminals caught.")
-    cut_score = float(np.quantile(S["risk_score"], 1 - pct_cut / 100))
-    sim_flag = S["risk_score"] >= cut_score
-    sim_lab = S[sim_flag & S["y"].notna()]
-    tot_illicit = int((S["y"] == 1).sum())
-    caught = int((sim_lab["y"] == 1).sum())
-    s1, s2, s3, s4 = st.columns(4)
-    s1.metric("Risk Cutoff", f"{cut_score:.1f} / 100")
-    s2.metric("Alerts Generated", f"{int(sim_flag.sum()):,}", f"{sim_flag.mean():.2%} of traffic", delta_color="off")
-    s3.metric("Known Precision", f"{sim_lab['y'].mean():.1%}" if len(sim_lab) else "–")
-    s4.metric("Known Criminals Caught", f"{caught} / {tot_illicit}", f"{caught / max(tot_illicit, 1):.1%} recall")
+    st.subheader("1. Alert Budget Simulator")
+    with st.container(border=True):
+        pct_cut = st.slider(
+            "Alert threshold (flag top % of traffic)", 0.2, 10.0, 1.0, step=0.2,
+            help="Slide to see the trade-off between investigator workload and criminals caught.",
+        )
+        cut_score = float(np.quantile(S["risk_score"], 1 - pct_cut / 100))
+        sim_flag = S["risk_score"] >= cut_score
+        sim_lab = S[sim_flag & S["y"].notna()]
+        tot_illicit = int((S["y"] == 1).sum())
+        caught = int((sim_lab["y"] == 1).sum())
+        s1, s2, s3, s4 = st.columns(4)
+        s1.metric("Risk Cutoff", f"{cut_score:.1f} / 100")
+        s2.metric("Alerts Generated", f"{int(sim_flag.sum()):,}", f"{sim_flag.mean():.2%} of traffic", delta_color="off")
+        s3.metric("Known Precision", f"{sim_lab['y'].mean():.1%}" if len(sim_lab) else "–")
+        s4.metric("Criminals Caught", f"{caught} / {tot_illicit}", f"{caught / max(tot_illicit, 1):.1%} recall")
 
     st.divider()
-    st.header("2. Stratified Verification & Top-K Lift")
-    vs = D["vsum"]
+    st.subheader("2. Detection Accuracy & Verification")
     c_left, c_right = st.columns(2)
-    with c_left:
-        allrows = vs[vs["band"] == "All sampled"].copy()
-        allrows["Method"] = allrows["method"]
-        chart = alt.Chart(allrows).mark_bar(size=65, cornerRadiusTopLeft=6, cornerRadiusTopRight=6).encode(
-            x=alt.X("Method:N", title=None, axis=alt.Axis(labelAngle=0)),
-            y=alt.Y("precision:Q", title="Verified Precision (95% Wilson CI)", axis=alt.Axis(format="%"),
-                    scale=alt.Scale(domain=[0, 1])),
-            color=alt.Color("Method:N", legend=None, scale=alt.Scale(range=["#64748B", "#38BDF8"])),
-        )
-        err = alt.Chart(allrows).mark_errorbar(thickness=2, color="#F8FAFC").encode(
-            x="Method:N", y=alt.Y("ci_low:Q", title=""), y2="ci_high:Q",
-        )
-        st.altair_chart((chart + err).properties(height=290), use_container_width=True)
 
-    with c_right:
+    with c_left:
+        st.caption("**Top-K Precision** — Share of top alerts that are truly illicit")
         m = D["metrics"].copy()
         pick = m[m["model"].str.contains("FINAL|Amount|Random")].copy()
-        pick["short"] = np.where(
-            pick["model"].str.contains("FINAL"), "Our Model (Hybrid)",
-            np.where(pick["model"].str.contains("Amount"), "Amount Baseline", "Random Guessing"),
+        pick["Model"] = np.where(
+            pick["model"].str.contains("FINAL"), "Hybrid Model",
+            np.where(pick["model"].str.contains("Amount"), "Amount Baseline", "Random"),
         )
-        topk = pick.melt("short", ["P@50", "P@100", "P@500"], var_name="Cutoff", value_name="Precision")
-        lift = alt.Chart(topk).mark_bar(cornerRadiusTopLeft=4, cornerRadiusTopRight=4).encode(
+        topk = pick.melt("Model", ["P@50", "P@100", "P@500"], var_name="Cutoff", value_name="Precision")
+        lift = alt.Chart(topk).mark_bar(cornerRadiusTopLeft=5, cornerRadiusTopRight=5).encode(
             x=alt.X("Cutoff:N", sort=["P@50", "P@100", "P@500"], title=None, axis=alt.Axis(labelAngle=0)),
-            y=alt.Y("Precision:Q", axis=alt.Axis(format="%"), scale=alt.Scale(domain=[0, 1])),
-            xOffset="short:N",
-            color=alt.Color("short:N", title="Model",
-                            scale=alt.Scale(domain=["Our Model (Hybrid)", "Amount Baseline", "Random Guessing"],
-                                            range=["#38BDF8", "#64748B", "#334155"])),
-            tooltip=[alt.Tooltip("short:N", title="Model"), "Cutoff", alt.Tooltip("Precision:Q", format=".1%")],
-        ).properties(height=290)
+            y=alt.Y("Precision:Q", title=None, axis=alt.Axis(format="%"), scale=alt.Scale(domain=[0, 0.85])),
+            xOffset="Model:N",
+            color=alt.Color(
+                "Model:N",
+                legend=alt.Legend(orient="top", title=None),
+                scale=alt.Scale(
+                    domain=["Hybrid Model", "Amount Baseline", "Random"],
+                    range=["#38BDF8", "#64748B", "#334155"],
+                ),
+            ),
+            tooltip=["Model", "Cutoff", alt.Tooltip("Precision:Q", format=".1%")],
+        ).properties(height=270)
         st.altair_chart(lift, use_container_width=True)
 
-    nice_m = m.rename(columns={
-        "model": "Model", "flag_rate_%": "Flag Rate %", "recall_at_flag_%": "Recall @ Flag %",
-        "labels_used": "Labels Used", "PR-AUC_5seed_mean": "5-Seed PR-AUC",
-        "PR-AUC_5seed_std": "5-Seed Std", "distinct_scores": "Distinct Scores",
-    })
-    st.dataframe(
-        nice_m, hide_index=True, use_container_width=True,
-        column_config={c: st.column_config.NumberColumn(format="percent") for c in ["P@50", "P@100", "P@500"]},
-    )
+    with c_right:
+        st.caption("**Stratified Audit** — Confirmed illicit rate across 100 sampled alerts")
+        vs = D["vsum"].copy()
+        vs["Method"] = np.where(vs["method"].str.contains("Our"), "Hybrid Model", "Amount Baseline")
+        band_order = ["Rank 1-50", "Rank 51-200", "Rank 201-500", "All sampled"]
+        audit = alt.Chart(vs).mark_bar(cornerRadiusTopLeft=5, cornerRadiusTopRight=5).encode(
+            x=alt.X("band:N", sort=band_order, title=None, axis=alt.Axis(labelAngle=0)),
+            y=alt.Y("precision:Q", title=None, axis=alt.Axis(format="%"), scale=alt.Scale(domain=[0, 0.85])),
+            xOffset="Method:N",
+            color=alt.Color(
+                "Method:N",
+                legend=alt.Legend(orient="top", title=None),
+                scale=alt.Scale(domain=["Hybrid Model", "Amount Baseline"], range=["#38BDF8", "#64748B"]),
+            ),
+            tooltip=[
+                "Method",
+                alt.Tooltip("band:N", title="Band"),
+                alt.Tooltip("confirmed_illicit:Q", title="Confirmed Illicit"),
+                alt.Tooltip("sampled:Q", title="Sampled"),
+                alt.Tooltip("precision:Q", title="Precision", format=".1%"),
+            ],
+        ).properties(height=270)
+        st.altair_chart(audit, use_container_width=True)
 
-    st.header("3. Concept Drift & Label Efficiency")
-    d1, d2 = st.columns([3, 2])
-    with d1:
-        ps = D["per_step"].rename(columns={"time_step": "Window", "PR-AUC final": "Our model",
-                                           "PR-AUC amount": "Amount baseline"})
-        long = ps.melt("Window", ["Our model", "Amount baseline"], var_name="Approach", value_name="PR-AUC")
-        line = alt.Chart(long).mark_line(point=True).encode(
-            x=alt.X("Window:O"), y=alt.Y("PR-AUC:Q"),
-            color=alt.Color("Approach:N", scale=alt.Scale(range=["#64748B", "#38BDF8"])),
+    with st.expander("View full model benchmark table"):
+        nice_m = m[["model", "P@50", "P@100", "P@500", "PR-AUC", "recall_at_flag_%", "labels_used"]].rename(columns={
+            "model": "Model",
+            "recall_at_flag_%": "Recall @ Flag %",
+            "labels_used": "Labels Used",
+        })
+        st.dataframe(
+            nice_m, hide_index=True, use_container_width=True,
+            column_config={
+                "P@50": st.column_config.NumberColumn(format="percent"),
+                "P@100": st.column_config.NumberColumn(format="percent"),
+                "P@500": st.column_config.NumberColumn(format="percent"),
+                "PR-AUC": st.column_config.NumberColumn(format="%.3f"),
+                "Recall @ Flag %": st.column_config.NumberColumn(format="%.1f%%"),
+            },
         )
-        rule = alt.Chart(pd.DataFrame({"x": [43]})).mark_rule(strokeDash=[6, 4], color="#EF4444").encode(x="x:O")
-        st.altair_chart((line + rule).properties(height=260), use_container_width=True)
-        st.caption("Red dashed line (window 43): dark-market shutdown causes severe concept drift until window 48.")
+
+    st.divider()
+    st.subheader("3. Concept Drift & Label Efficiency")
+    d1, d2 = st.columns([3, 2])
+
+    with d1:
+        st.caption("**Performance Over Time** — Dark-market shutdown at window 43 causes severe drift")
+        ps = D["per_step"].rename(columns={
+            "time_step": "Window", "PR-AUC final": "Hybrid Model", "PR-AUC amount": "Amount Baseline",
+        })
+        long = ps.melt("Window", ["Hybrid Model", "Amount Baseline"], var_name="Approach", value_name="PR-AUC")
+        color_scale = alt.Scale(domain=["Hybrid Model", "Amount Baseline"], range=["#38BDF8", "#64748B"])
+        area = alt.Chart(long[long["Approach"] == "Hybrid Model"]).mark_area(
+            opacity=0.16, color="#38BDF8"
+        ).encode(x="Window:O", y="PR-AUC:Q")
+        line = alt.Chart(long).mark_line(point=True, strokeWidth=2.5).encode(
+            x=alt.X("Window:O", title="Time Window"),
+            y=alt.Y("PR-AUC:Q", title="PR-AUC"),
+            color=alt.Color("Approach:N", legend=alt.Legend(orient="top", title=None), scale=color_scale),
+            tooltip=["Window", "Approach", alt.Tooltip("PR-AUC:Q", format=".3f")],
+        )
+        rule = alt.Chart(pd.DataFrame({"x": [43]})).mark_rule(
+            strokeDash=[5, 4], strokeWidth=1.8, color="#EF4444"
+        ).encode(x="x:O")
+        st.altair_chart((area + line + rule).properties(height=265), use_container_width=True)
+
     with d2:
-        b = D["budget"]
-        st.altair_chart(alt.Chart(b).mark_line(point=True, color="#38BDF8").encode(
-            x=alt.X("total_labels:Q", title="Verified past labels"),
-            y=alt.Y("PR-AUC mean:Q", title="PR-AUC"),
-        ).properties(height=260), use_container_width=True)
-        st.caption(f"Gains plateau around {SUM['labels_used']} labels (1.7% of training labels).")
+        st.caption(f"**Label Efficiency** — Gains plateau at ~{SUM['labels_used']} labels (1.7% of data)")
+        b = D["budget"].copy()
+        b_area = alt.Chart(b).mark_area(opacity=0.16, color="#38BDF8").encode(
+            x=alt.X("total_labels:Q", title="Verified Past Labels"),
+            y=alt.Y("PR-AUC mean:Q", title="PR-AUC", scale=alt.Scale(domain=[0.32, 0.45])),
+        )
+        b_line = alt.Chart(b).mark_line(point=alt.OverlayMarkDef(size=70), strokeWidth=2.5, color="#38BDF8").encode(
+            x=alt.X("total_labels:Q", title="Verified Past Labels"),
+            y=alt.Y("PR-AUC mean:Q", title="PR-AUC", scale=alt.Scale(domain=[0.32, 0.45])),
+            tooltip=[
+                alt.Tooltip("total_labels:Q", title="Labels Used"),
+                alt.Tooltip("PR-AUC mean:Q", title="PR-AUC", format=".3f"),
+            ],
+        )
+        sweet = alt.Chart(pd.DataFrame({"x": [SUM["labels_used"]]})).mark_rule(
+            strokeDash=[4, 4], color="#22C55E", strokeWidth=1.5
+        ).encode(x="x:Q")
+        st.altair_chart((b_area + b_line + sweet).properties(height=265), use_container_width=True)
 
 
 # --------------------------------------------------------------------------- #
