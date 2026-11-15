@@ -1,7 +1,18 @@
-# Bitcoin Suspicious Activity Finder (SIH26146)
+# Bitcoin Flow Intelligence — Transaction Anomaly & Security Scanner
 
-AI-powered monitoring and analysis of Bitcoin transaction traffic on the **Elliptic++** dataset.  
-Designed so investigators and non-technical users can review ranked suspicious flows, understand *why* each flow was flagged in plain English, inspect money-flow diagrams and connected chains, and record verification decisions.
+**Live Deployment:** [https://bitcoinanomolydetetction-b8zmcjj77eqqydleg9w3wa.streamlit.app/](https://bitcoinanomolydetetction-b8zmcjj77eqqydleg9w3wa.streamlit.app/)
+
+## About
+
+**Bitcoin Flow Intelligence** is an institutional-grade Bitcoin transaction anomaly and security screening platform built on the **Elliptic++** dataset (203,769 transactions and 234,355 directed money-flow edges). It combines unsupervised look-alike burst detection, behavior-family risk calibration, and multi-hop graph analysis to surface illicit Bitcoin flows (peeling chains, mixer bursts, and structural anomalies) with plain-English explanations.
+
+### Core Platform Capabilities
+- **Secure Portal & Live Global Crypto Desk:** Salted `PBKDF2-HMAC-SHA256` user authentication paired with a live global Bitcoin spot, perpetual derivatives, mempool fee, and crypto news terminal.
+- **Live CSV Transaction Scanner (`Scan Your CSV`):** Upload any Bitcoin transaction CSV (full 182-feature Elliptic++ format or simplified transaction columns) to score transactions in real time using the trained hybrid ML pipeline.
+- **Command Center:** High-level telemetry across 54,194 test-window transactions, alert volume trends, and amount-vs-risk distributions.
+- **Ranked Flows & Case Briefs:** Interactive investigator queue ranked by anomaly score (0–100) with 1-hop ego-network flow graphs and downloadable case briefs.
+- **Suspicious Chains:** Multi-hop contagion clusters tracking connected high-risk transactions and BTC velocity per window.
+- **Model & Drift Lab:** Interactive alert-budget simulator, stratified Top-500 verification audit, concept-drift tracking (window 43 dark-market shutdown), and label-efficiency curves.
 
 ---
 
