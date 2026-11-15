@@ -23,7 +23,7 @@ import streamlit.components.v1 as components
 ROOT = Path(__file__).resolve().parent.parent
 if str(ROOT / "src") not in sys.path:
     sys.path.insert(0, str(ROOT / "src"))
-from models import score_dataframe  # noqa: E402
+from models import score_csv_stream, score_dataframe  # noqa: E402
 
 RES = ROOT / "results"
 TIME, AMOUNT = "Time step", "total_BTC"
@@ -1096,11 +1096,14 @@ def page_scan():
     if up is not None:
         file_key = f"{up.name}:{up.size}"
         if st.session_state.get("scan_key") != file_key:
-            with st.spinner("Reading & scoring uploaded CSV through the 182-feature ML pipeline..."):
-                df_in = pd.read_csv(up)
-                scored_raw, n_feats = score_dataframe(df_in, bundle)
+            with st.spinner("Streaming & scoring uploaded CSV in memory-safe chunks..."):
+                try:
+                    scored_raw, n_feats = score_csv_stream(up, bundle)
+                except Exception as exc:
+                    st.error(f"Could not process CSV file: {exc}")
+                    return
                 scored_raw["Tier"] = scored_raw["risk_level"].map(LEVEL_ICON)
-                scored_raw.insert(0, "Rank", np.arange(1, len(scored_raw) + 1))
+                scored_raw.insert(0, "Rank", np.arange(1, len(scored_raw) + 1, dtype=np.int32))
                 st.session_state["scan_scored"] = scored_raw
                 st.session_state["scan_n_feats"] = n_feats
                 st.session_state["scan_key"] = file_key
@@ -1182,7 +1185,14 @@ def page_scan():
             "Why Flagged": st.column_config.TextColumn("Why Flagged", width="large"),
         },
     )
-    st.download_button("Download Scored Results (.csv)", view_df.to_csv(index=False),
+    max_export = 50000
+    export_df = view_df.head(max_export)
+    export_label = (
+        f"Download Top {max_export:,} Scored Results (.csv)"
+        if len(view_df) > max_export
+        else "Download Scored Results (.csv)"
+    )
+    st.download_button(export_label, export_df.to_csv(index=False),
                        "scanned_transactions.csv", "text/csv")
 
 

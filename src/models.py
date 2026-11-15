@@ -106,37 +106,57 @@ def score_dataframe(df, bundle):
     Works with full 182-feature Elliptic++ CSVs OR simplified CSVs (missing
     features are imputed with training medians).
     """
+    n_rows = len(df)
     feats = bundle["feats"]
     full_cols = sum(c in df.columns for c in feats)
+    if n_rows == 0:
+        return pd.DataFrame(columns=[
+            "txId", "Time step", "total_BTC", "risk_score", "risk_level",
+            "lookalike_pct", "family_risk_pct", "shape_rarity_pct", "amount_pct",
+            "cluster", "Pattern", "Why Flagged",
+        ]), full_cols
+
     med = bundle["train_medians"]
-    cols = {
-        c: (pd.to_numeric(df[c], errors="coerce").fillna(med[c]) if c in df.columns
-            else np.full(len(df), med[c], dtype="float32"))
-        for c in feats
-    }
-    X = pd.DataFrame(cols, index=df.index).to_numpy("float32")
-    Xl = signed_log(X)
+    X = np.empty((n_rows, len(feats)), dtype=np.float32)
+    for j, c in enumerate(feats):
+        m_val = float(med[c])
+        if c in df.columns:
+            col = pd.to_numeric(df[c], errors="coerce").to_numpy(dtype=np.float32, copy=True)
+            bad = ~np.isfinite(col)
+            if bad.any():
+                col[bad] = m_val
+            X[:, j] = col
+        else:
+            X[:, j] = m_val
+
+    Xl = signed_log(X).astype(np.float32, copy=False)
     Z = bundle["scaler"].transform(Xl)
-    Zp = bundle["pca"].transform(Z).astype("float32")
+    Zp = bundle["pca"].transform(Z).astype(np.float32, copy=False)
+    del Z
 
     # Point unusualness + family risk
     raw_point = -bundle["iso"].score_samples(Xl)
+    del Xl
     clusters = bundle["km"].predict(Zp)
     risk = pd.Series(clusters).map(bundle["family_risk_map"]).fillna(bundle["prior"]).to_numpy()
 
     # Look-alike burst within the uploaded batch (per window if >= 12 rows, else whole batch)
-    steps = pd.to_numeric(df.get("Time step", pd.Series(1, index=df.index)), errors="coerce").fillna(1).to_numpy()
-    k = min(10, max(1, len(df) - 1))
-    raw_look = np.zeros(len(df))
-    if len(df) > 1:
+    if "Time step" in df.columns:
+        steps = pd.to_numeric(df["Time step"], errors="coerce").fillna(1).to_numpy()
+    else:
+        steps = np.ones(n_rows, dtype=np.int32)
+    k = min(10, max(1, n_rows - 1))
+    raw_look = np.zeros(n_rows, dtype=np.float32)
+    if n_rows > 1:
         for s in np.unique(steps):
             m = steps == s
-            if m.sum() >= 12:
+            cnt = int(m.sum())
+            if cnt >= 12:
                 d = NearestNeighbors(n_neighbors=11).fit(Zp[m]).kneighbors(Zp[m])[0][:, 1:]
-                raw_look[m] = rankdata(-d.mean(axis=1)) / m.sum()
+                raw_look[m] = rankdata(-d.mean(axis=1)) / cnt
             else:
                 d = NearestNeighbors(n_neighbors=k + 1).fit(Zp).kneighbors(Zp[m])[0][:, 1:]
-                raw_look[m] = rankdata(-d.mean(axis=1)) / len(df)
+                raw_look[m] = rankdata(-d.mean(axis=1)) / n_rows
     else:
         raw_look[:] = 0.5
 
@@ -145,20 +165,24 @@ def score_dataframe(df, bundle):
     pct_point = to_percentile(raw_point, bundle["ref_point"])
     final = blend(pct_look, pct_fam, bundle["w"])
 
-    amt = pd.to_numeric(df.get("total_BTC", pd.Series(0.0, index=df.index)), errors="coerce").fillna(0).to_numpy()
+    if "total_BTC" in df.columns:
+        amt = pd.to_numeric(df["total_BTC"], errors="coerce").fillna(0.0).to_numpy(dtype=np.float32)
+        amt = np.where(np.isfinite(amt), amt, 0.0)
+    else:
+        amt = np.zeros(n_rows, dtype=np.float32)
     pct_amt = to_percentile(amt, bundle["ref_amount"])
 
     out = pd.DataFrame({
-        "txId": df["txId"].values if "txId" in df.columns else np.arange(1, len(df) + 1),
-        "Time step": steps.astype(int),
-        "total_BTC": amt,
-        "risk_score": np.round(final * 100, 1),
+        "txId": df["txId"].astype(str).values if "txId" in df.columns else np.arange(1, n_rows + 1).astype(str),
+        "Time step": steps.astype(np.int32),
+        "total_BTC": np.round(amt, 4),
+        "risk_score": np.round(final * 100, 1).astype(np.float32),
         "risk_level": np.select([final >= bundle["thr"], final >= bundle["thr_med"]], ["High", "Medium"], "Low"),
-        "lookalike_pct": np.round(pct_look * 100, 1),
-        "family_risk_pct": np.round(risk * 100, 1),
-        "shape_rarity_pct": np.round(pct_point * 100, 1),
-        "amount_pct": np.round(pct_amt * 100, 1),
-        "cluster": clusters,
+        "lookalike_pct": np.round(pct_look * 100, 1).astype(np.float32),
+        "family_risk_pct": np.round(risk * 100, 1).astype(np.float32),
+        "shape_rarity_pct": np.round(pct_point * 100, 1).astype(np.float32),
+        "amount_pct": np.round(pct_amt * 100, 1).astype(np.float32),
+        "cluster": clusters.astype(np.int16),
     })
     out["Pattern"] = np.select(
         [pct_look >= 0.90, risk > bundle["prior"] * 1.5, pct_point >= 0.97],
@@ -166,11 +190,12 @@ def score_dataframe(df, bundle):
         default="Normal",
     )
     reasons = []
-    for i in range(len(out)):
+    prior_cut = bundle["prior"] * 1.5
+    for i in range(n_rows):
         r = []
         if pct_look[i] >= 0.90:
             r.append(f"Dense look-alike burst (top {100 - pct_look[i] * 100:.0f}%).")
-        if risk[i] > bundle["prior"] * 1.5:
+        if risk[i] > prior_cut:
             r.append(f"Matches high-risk behaviour group #{clusters[i]}.")
         if pct_point[i] >= 0.97:
             r.append("Unusual transaction shape vs normal traffic.")
@@ -179,4 +204,29 @@ def score_dataframe(df, bundle):
         reasons.append(" | ".join(r) if r else "Looks like ordinary traffic.")
     out["Why Flagged"] = reasons
     return out.sort_values("risk_score", ascending=False).reset_index(drop=True), full_cols
+
+
+def score_csv_stream(source, bundle, chunk_size: int = 15000):
+    """Stream-score a potentially huge CSV in low-memory chunks so large files
+    never exceed cloud container RAM limits."""
+    import gc
+
+    if hasattr(source, "seek"):
+        source.seek(0)
+    parts = []
+    full_cols = 0
+    reader = pd.read_csv(source, chunksize=chunk_size, low_memory=True)
+    for chunk in reader:
+        scored_chunk, fc = score_dataframe(chunk, bundle)
+        full_cols = max(full_cols, fc)
+        parts.append(scored_chunk)
+        del chunk
+        gc.collect()
+    if not parts:
+        return score_dataframe(pd.DataFrame(), bundle)
+    combined = pd.concat(parts, ignore_index=True)
+    del parts
+    gc.collect()
+    combined = combined.sort_values("risk_score", ascending=False).reset_index(drop=True)
+    return combined, full_cols
 
