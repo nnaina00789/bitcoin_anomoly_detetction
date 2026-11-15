@@ -1094,20 +1094,31 @@ def page_scan():
                                use_container_width=True)
 
     if up is not None:
-        st.session_state["scan_df"] = pd.read_csv(up)
+        file_key = f"{up.name}:{up.size}"
+        if st.session_state.get("scan_key") != file_key:
+            with st.spinner("Reading & scoring uploaded CSV through the 182-feature ML pipeline..."):
+                df_in = pd.read_csv(up)
+                scored_raw, n_feats = score_dataframe(df_in, bundle)
+                scored_raw["Tier"] = scored_raw["risk_level"].map(LEVEL_ICON)
+                scored_raw.insert(0, "Rank", np.arange(1, len(scored_raw) + 1))
+                st.session_state["scan_scored"] = scored_raw
+                st.session_state["scan_n_feats"] = n_feats
+                st.session_state["scan_key"] = file_key
     elif run_demo and sample_path.exists():
-        st.session_state["scan_df"] = pd.read_csv(sample_path)
+        with st.spinner("Running trained scaler, PCA, Isolation Forest, K-Means & look-alike burst detector..."):
+            df_in = pd.read_csv(sample_path)
+            scored_raw, n_feats = score_dataframe(df_in, bundle)
+            scored_raw["Tier"] = scored_raw["risk_level"].map(LEVEL_ICON)
+            scored_raw.insert(0, "Rank", np.arange(1, len(scored_raw) + 1))
+            st.session_state["scan_scored"] = scored_raw
+            st.session_state["scan_n_feats"] = n_feats
+            st.session_state["scan_key"] = "demo"
 
-    df_in = st.session_state.get("scan_df")
-    if df_in is None:
-        st.info("Upload a CSV above or click **Run Demo on Sample (60 Txs)** to test the live ML scanner.")
+    scored = st.session_state.get("scan_scored")
+    n_feats = st.session_state.get("scan_n_feats", 0)
+    if scored is None:
+        st.info("Upload a CSV above (up to **1 GB**) or click **Run Demo on Sample (60 Txs)** to test the live ML scanner.")
         return
-
-    with st.spinner("Running trained scaler, PCA, Isolation Forest, K-Means & look-alike burst detector..."):
-        scored, n_feats = score_dataframe(df_in, bundle)
-
-    scored["Tier"] = scored["risk_level"].map(LEVEL_ICON)
-    scored.insert(0, "Rank", np.arange(1, len(scored) + 1))
 
     if n_feats == len(bundle["feats"]):
         st.success(f"Scanned **{len(scored):,}** transactions using all **{n_feats}** trained features.")
@@ -1158,8 +1169,11 @@ def page_scan():
     view_df = scored[scored["risk_level"] == tier_map[tier_pick]] if tier_pick in tier_map else scored
 
     show_cols = ["Rank", "Tier", "txId", TIME, AMOUNT, "risk_score", "Pattern", "Why Flagged"]
+    max_preview = 5000
+    if len(view_df) > max_preview:
+        st.caption(f"Showing top **{max_preview:,}** of **{len(view_df):,}** matching transactions (full results included in CSV download below).")
     st.dataframe(
-        view_df[show_cols], hide_index=True, use_container_width=True, height=380,
+        view_df[show_cols].head(max_preview), hide_index=True, use_container_width=True, height=380,
         column_config={
             "txId": st.column_config.TextColumn("Transaction ID"),
             TIME: st.column_config.NumberColumn("Window"),
