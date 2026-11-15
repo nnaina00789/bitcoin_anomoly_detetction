@@ -1080,15 +1080,20 @@ def page_scan():
         return
 
     sample_path = RES / "sample_scan.csv"
+    test_500_path = RES / "test_bitcoin_500.csv"
     with st.container(border=True):
         c1, c2 = st.columns([2, 1])
         up = c1.file_uploader(
-            "Upload transaction CSV (full 182-feature Elliptic++ format or simplified columns like `txId`, `Time step`, `total_BTC`, `fees`, `num_input_addresses`, `num_output_addresses`)",
+            "Upload transaction CSV (full 182-feature Elliptic++ format or any Bitcoin transaction CSV with amount/fee/input/output columns)",
             type=["csv"],
         )
         c2.write("")
         run_demo = c2.button("Run Demo on Sample (60 Txs)", icon=":material/play_arrow:", use_container_width=True)
-        if sample_path.exists():
+        if test_500_path.exists():
+            c2.download_button("Download 500-Tx Test CSV", test_500_path.read_bytes(),
+                               "test_bitcoin_transactions.csv", "text/csv", icon=":material/download:",
+                               use_container_width=True)
+        elif sample_path.exists():
             c2.download_button("Download Sample CSV", sample_path.read_bytes(),
                                "sample_bitcoin_txs.csv", "text/csv", icon=":material/download:",
                                use_container_width=True)
@@ -1124,10 +1129,15 @@ def page_scan():
         return
 
     if n_feats == len(bundle["feats"]):
-        st.success(f"Scanned **{len(scored):,}** transactions using all **{n_feats}** trained features.")
-    else:
+        st.success(f"Scanned **{len(scored):,}** transactions using all **{n_feats}** trained Elliptic++ features.")
+    elif n_feats >= 20:
         st.info(f"Scanned **{len(scored):,}** transactions (**{n_feats}/{len(bundle['feats'])}** Elliptic++ features "
                 "matched; remaining features imputed with training medians).")
+    else:
+        st.success(
+            f"Scanned **{len(scored):,}** transactions using **Adaptive Schema & Multivariate Anomaly Mode** "
+            "(auto-mapped blockchain columns + statistical outlier & burst profiling)."
+        )
 
     n_hi = int((scored["risk_level"] == "High").sum())
     n_med = int((scored["risk_level"] == "Medium").sum())
