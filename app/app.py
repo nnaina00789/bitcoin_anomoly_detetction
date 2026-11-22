@@ -401,7 +401,7 @@ def load():
         default="Normal",
     )
     s["Flow"] = s["n_senders"].astype(str) + " in → " + s["n_receivers"].astype(str) + " out"
-    s["Main reason"] = s["why_flagged"].str.split(" | ").str[0]
+    s["Main reason"] = s["why_flagged"].str.split(" | ", regex=False).str[0]
     return d
 
 
