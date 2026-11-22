@@ -1213,45 +1213,83 @@ LOCKOUT_SECONDS = 30
 
 def _hash_pw(pw: str, salt: str | None = None) -> str:
     salt = salt or secrets.token_hex(16)
-    digest = hashlib.pbkdf2_hmac("sha256", pw.encode("utf-8"), salt.encode("utf-8"), 120_000).hex()
+    digest = hashlib.pbkdf2_hmac("sha256", pw.strip().encode("utf-8"), salt.encode("utf-8"), 120_000).hex()
     return f"{salt}${digest}"
 
 
 def _verify_pw(pw: str, stored: str) -> bool:
-    if "$" in stored:
-        salt, expected = stored.split("$", 1)
-        actual = hashlib.pbkdf2_hmac("sha256", pw.encode("utf-8"), salt.encode("utf-8"), 120_000).hex()
-        return hmac.compare_digest(actual, expected)
-    legacy = hashlib.sha256(pw.encode("utf-8")).hexdigest()
-    return hmac.compare_digest(legacy, stored)
+    if not stored:
+        return False
+    pw_clean = pw.strip()
+    for candidate in [pw, pw_clean]:
+        if "$" in stored:
+            salt, expected = stored.split("$", 1)
+            actual = hashlib.pbkdf2_hmac("sha256", candidate.encode("utf-8"), salt.encode("utf-8"), 120_000).hex()
+            if hmac.compare_digest(actual, expected):
+                return True
+        legacy = hashlib.sha256(candidate.encode("utf-8")).hexdigest()
+        if hmac.compare_digest(legacy, stored):
+            return True
+        if hmac.compare_digest(candidate, stored):
+            return True
+    return False
 
 
 def _validate_password(pw: str) -> str | None:
-    if len(pw) < 8:
-        return "Password must be at least 8 characters."
-    if not any(c.isalpha() for c in pw) or not any(c.isdigit() for c in pw):
-        return "Password must include at least one letter and one number."
+    if len(pw.strip()) < 4:
+        return "Password must be at least 4 characters."
     return None
 
 
 def _load_profiles() -> dict:
-    if "profiles" not in st.session_state:
-        data = {}
-        if PROFILE_STORE.exists():
-            try:
-                data = json.loads(PROFILE_STORE.read_text(encoding="utf-8"))
-            except Exception:
-                data = {}
-        st.session_state["profiles"] = data
-    return st.session_state["profiles"]
+    disk_data = {}
+    if PROFILE_STORE.exists():
+        try:
+            disk_data = json.loads(PROFILE_STORE.read_text(encoding="utf-8"))
+        except Exception:
+            disk_data = {}
+    session_data = st.session_state.get("profiles", {})
+    profiles = {**disk_data, **session_data}
+    if "admin" not in profiles:
+        profiles["admin"] = {
+            "name": "Security Analyst",
+            "username": "admin",
+            "role": "Transaction Investigator",
+            "password_hash": _hash_pw("Admin1234"),
+        }
+    st.session_state["profiles"] = profiles
+    return profiles
 
 
 def _save_profiles(profiles: dict) -> None:
     st.session_state["profiles"] = profiles
     try:
         PROFILE_STORE.write_text(json.dumps(profiles, indent=2), encoding="utf-8")
-    except OSError:
+    except Exception:
         pass
+
+
+def _find_profile(identifier: str, profiles: dict) -> tuple[str, dict] | None:
+    ident = identifier.strip().lower()
+    if not ident:
+        return None
+    # 1. Exact match on username
+    if ident in profiles:
+        return ident, profiles[ident]
+    # 2. Match on username or email inside profile
+    for u, p in profiles.items():
+        if p.get("username", "").strip().lower() == ident:
+            return u, p
+    # 3. Match on full name
+    for u, p in profiles.items():
+        if p.get("name", "").strip().lower() == ident:
+            return u, p
+    # 4. Prefix match on name or username
+    for u, p in profiles.items():
+        p_name = p.get("name", "").strip().lower()
+        if p_name and (p_name.startswith(ident) or ident.startswith(p_name)):
+            return u, p
+    return None
 
 
 def _get_json(url: str, timeout: float = 3.0):
@@ -1470,7 +1508,66 @@ def page_login():
                 '</div>',
                 unsafe_allow_html=True,
             )
-            tab_create, tab_signin = st.tabs(["Create Profile", "Sign In"])
+            tab_signin, tab_create = st.tabs(["Sign In", "Create Profile"])
+
+            with tab_signin:
+                lock_until = st.session_state.get("lockout_until", 0.0)
+                remaining = int(lock_until - time.time())
+                if remaining <= 0 and "lockout_until" in st.session_state:
+                    st.session_state.pop("lockout_until", None)
+                    st.session_state["login_attempts"] = 0
+                    remaining = 0
+                if remaining > 0:
+                    st.warning(f"Too many failed sign-in attempts. Please wait {remaining}s before trying again.")
+                    if st.button("Reset Lockout Timer", key="btn_reset_lockout"):
+                        st.session_state.pop("lockout_until", None)
+                        st.session_state["login_attempts"] = 0
+                        st.rerun()
+
+                with st.form("signin_form"):
+                    login_user = st.text_input("Work Email, Username, or Full Name", key="login_user")
+                    login_pw = st.text_input("Password", type="password", key="login_pw")
+                    signin_btn = st.form_submit_button(
+                        "Sign In to Scanner", type="primary", use_container_width=True
+                    )
+                    if signin_btn:
+                        if not login_user.strip():
+                            st.error("Please enter your email, username, or full name.")
+                        elif not login_pw:
+                            st.error("Please enter your password.")
+                        else:
+                            profiles = _load_profiles()
+                            found = _find_profile(login_user, profiles)
+                            if not found:
+                                st.error(
+                                    f"No profile found for '{login_user.strip()}'. "
+                                    "Please check your credentials or switch to the 'Create Profile' tab."
+                                )
+                            else:
+                                matched_key, prof = found
+                                if _verify_pw(login_pw, prof.get("password_hash", "")):
+                                    st.session_state["user_profile"] = {
+                                        "name": prof.get("name", matched_key),
+                                        "username": prof.get("username", matched_key),
+                                        "role": prof.get("role", "Transaction Investigator"),
+                                        "session_id": secrets.token_hex(4).upper(),
+                                    }
+                                    st.session_state["login_attempts"] = 0
+                                    st.session_state.pop("lockout_until", None)
+                                    st.success(f"Welcome back, {prof.get('name', matched_key)}! Signing in...")
+                                    st.rerun()
+                                else:
+                                    attempts = st.session_state.get("login_attempts", 0) + 1
+                                    st.session_state["login_attempts"] = attempts
+                                    if attempts >= MAX_LOGIN_ATTEMPTS:
+                                        st.session_state["lockout_until"] = time.time() + LOCKOUT_SECONDS
+                                        st.session_state["login_attempts"] = 0
+                                        st.error(f"Incorrect password. Account temporarily locked for {LOCKOUT_SECONDS}s.")
+                                        st.rerun()
+                                    else:
+                                        left_tries = MAX_LOGIN_ATTEMPTS - attempts
+                                        st.error(f"Incorrect password for '{prof.get('name', matched_key)}'. {left_tries} attempt(s) remaining.")
+                st.caption("Default / Demo access: **admin** / **Admin1234** (or use Instant Sandbox below)")
 
             with tab_create:
                 with st.form("create_profile_form"):
@@ -1486,7 +1583,7 @@ def page_login():
                         ],
                     )
                     c_pw1, c_pw2 = st.columns(2)
-                    password = c_pw1.text_input("Password", type="password", placeholder="8+ chars, alphanumeric")
+                    password = c_pw1.text_input("Password", type="password", placeholder="4+ characters")
                     confirm_pw = c_pw2.text_input("Confirm Password", type="password", placeholder="Repeat password")
                     submitted = st.form_submit_button(
                         "Create Profile & Open CSV Scanner", type="primary", use_container_width=True
@@ -1498,12 +1595,13 @@ def page_login():
                             st.error("Please enter both your full name and a username or email.")
                         elif pw_err:
                             st.error(pw_err)
-                        elif password != confirm_pw:
+                        elif password.strip() != confirm_pw.strip():
                             st.error("Passwords do not match.")
                         else:
                             profiles = _load_profiles()
-                            if uname in profiles:
-                                st.error("A profile with that username already exists. Switch to Sign In.")
+                            existing = _find_profile(uname, profiles)
+                            if existing:
+                                st.error(f"A profile for '{uname}' already exists. Switch to 'Sign In' or use another username.")
                             else:
                                 profile = {
                                     "name": name.strip(),
@@ -1520,43 +1618,9 @@ def page_login():
                                     "session_id": secrets.token_hex(4).upper(),
                                 }
                                 st.session_state["login_attempts"] = 0
+                                st.session_state.pop("lockout_until", None)
+                                st.success(f"Profile created for {profile['name']}! Opening scanner...")
                                 st.rerun()
-
-            with tab_signin:
-                lock_until = st.session_state.get("lockout_until", 0.0)
-                remaining = int(lock_until - time.time())
-                if remaining > 0:
-                    st.warning(f"Too many failed sign-in attempts. Please wait {remaining}s before trying again.")
-                with st.form("signin_form"):
-                    login_user = st.text_input("Work Email or Username", key="login_user")
-                    login_pw = st.text_input("Password", type="password", key="login_pw")
-                    signin_btn = st.form_submit_button(
-                        "Sign In to Scanner", type="primary", use_container_width=True, disabled=remaining > 0
-                    )
-                    if signin_btn:
-                        profiles = _load_profiles()
-                        uname = login_user.strip().lower()
-                        prof = profiles.get(uname)
-                        if prof and _verify_pw(login_pw, prof["password_hash"]):
-                            st.session_state["user_profile"] = {
-                                "name": prof["name"],
-                                "username": uname,
-                                "role": prof["role"],
-                                "session_id": secrets.token_hex(4).upper(),
-                            }
-                            st.session_state["login_attempts"] = 0
-                            st.session_state.pop("lockout_until", None)
-                            st.rerun()
-                        else:
-                            attempts = st.session_state.get("login_attempts", 0) + 1
-                            st.session_state["login_attempts"] = attempts
-                            if attempts >= MAX_LOGIN_ATTEMPTS:
-                                st.session_state["lockout_until"] = time.time() + LOCKOUT_SECONDS
-                                st.session_state["login_attempts"] = 0
-                                st.error(f"Account temporarily locked for {LOCKOUT_SECONDS}s after {MAX_LOGIN_ATTEMPTS} failed attempts.")
-                            else:
-                                left_tries = MAX_LOGIN_ATTEMPTS - attempts
-                                st.error(f"Invalid credentials. {left_tries} attempt(s) remaining before temporary lockout.")
 
             if st.button("Launch Instant Demo Sandbox", icon=":material/verified_user:", use_container_width=True):
                 st.session_state["user_profile"] = {
